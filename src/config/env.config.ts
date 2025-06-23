@@ -9,7 +9,10 @@ const envConfig = {
     node_env: process.env.NODE_ENV,
     port: process.env.PORT,
     database_url: process.env.DATABASE_URL,
+    frontend_url: process.env.FRONTEND_URL,
     auth_secret: process.env.AUTH_SECRET,
+    email_user: process.env.EMAIL_USER,
+    email_password: process.env.EMAIL_PASS,
 };
 
 export default envConfig;

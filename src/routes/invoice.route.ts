@@ -1,8 +1,8 @@
 import { Router } from "express";
-import OrderControllers from "../controllers/order.controller";
+import InvoiceControllers from "../controllers/invoice.controller";
 
 const router = Router();
 
-router.get("/send-invoice-to-client", OrderControllers.getOrderByID);
+router.post("/send-invoice-pdf-to-client", InvoiceControllers.sendInvoiceToClientByEmail);
 
 export const invoiceRoute = router;

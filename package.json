@@ -2,9 +2,10 @@
     "name": "client-portal-server",
     "version": "1.0.0",
     "description": "",
-    "main": "index.js",
+    "main": "dist/server.js",
     "scripts": {
         "dev": "ts-node-dev --respawn --transpile-only ./src/server.ts",
+        "start": "node dist/server.js",
         "build": "tsc",
         "format": "pnpm exec prettier . --write"
     },

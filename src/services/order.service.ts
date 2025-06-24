@@ -2,7 +2,7 @@ import OrderModel from "../models/order.model";
 
 const getOrderByID = async (orderID: string) => {
     try {
-        const order = await OrderModel.findOne({ _id: orderID });
+        const order = await OrderModel.findOne({ orderID });
 
         return order;
     } catch (error) {

@@ -3,7 +3,7 @@ import UserModel from "../models/user.model";
 
 const sendInvoiceToClientByEmail = async (orderID: string) => {
     try {
-        const order = await OrderModel.findById(orderID);
+        const order = await OrderModel.findOne({ orderID });
 
         const user = await UserModel.findOne({ userID: order.userID });
 

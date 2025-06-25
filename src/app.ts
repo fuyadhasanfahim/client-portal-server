@@ -21,8 +21,8 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use("/api", verifyAuth, router);
 
-app.use("/", (_req, res) => {
-    res.send("Client Portal Server");
+app.get("/", (_req, res) => {
+    res.send("Server is running successfully!");
 });
 
 export default app;

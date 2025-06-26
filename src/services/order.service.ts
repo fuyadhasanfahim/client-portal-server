@@ -1,6 +1,6 @@
 import OrderModel from "../models/order.model";
 
-const getOrderByID = async (orderID: string) => {
+const getOrderByIDFromDB = async (orderID: string) => {
     try {
         const order = await OrderModel.findOne({ orderID });
 
@@ -14,16 +14,16 @@ const getOrderByID = async (orderID: string) => {
     }
 };
 
-const getDraftOrder = async ({
+const getDraftOrderFromDB = async ({
     userID,
     userRole,
-    skip = 0,
+    skip,
     limit = 10,
     searchQuery = "",
 }: {
     userID: string;
     userRole: string;
-    skip?: number;
+    skip: number;
     limit?: number;
     searchQuery?: string;
 }) => {
@@ -84,9 +84,58 @@ const getDraftOrder = async ({
     }
 };
 
+const getAllOrdersFromDB = async ({
+    role,
+    userID,
+    skip,
+    limit = 10,
+    searchQuery = "",
+}: {
+    role: string;
+    userID: string;
+    skip: number;
+    limit?: number;
+    searchQuery?: string;
+}) => {
+    try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const filter: any = {};
+
+        if (role === "User") {
+            filter.userID = userID;
+        }
+
+        if (searchQuery) {
+            filter.$or = [
+                { "services.name": { $regex: searchQuery, $options: "i" } },
+                { title: { $regex: searchQuery, $options: "i" } },
+                { orderStatus: { $regex: searchQuery, $options: "i" } },
+                { paymentStatus: { $regex: searchQuery, $options: "i" } },
+            ];
+        }
+
+        const [orders, total] = await Promise.all([
+            OrderModel.find(filter)
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(limit),
+            OrderModel.countDocuments(filter),
+        ]);
+
+        return { orders, total };
+    } catch (error) {
+        throw new Error(
+            error instanceof Error
+                ? error.message
+                : "Something went wrong! Please try again later."
+        );
+    }
+};
+
 const OrderServices = {
-    getOrderByID,
-    getDraftOrder,
+    getOrderByIDFromDB,
+    getDraftOrderFromDB,
+    getAllOrdersFromDB,
 };
 
 export default OrderServices;

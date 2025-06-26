@@ -12,7 +12,7 @@ const getOrderByID = async (req: Request, res: Response) => {
             });
         }
 
-        const data = await OrderServices.getOrderByID(orderID);
+        const data = await OrderServices.getOrderByIDFromDB(orderID);
 
         if (!data) {
             res.status(404).json({
@@ -54,7 +54,7 @@ const getDraftOrder = async (req: Request, res: Response) => {
 
         const skip = (page - 1) * limit;
 
-        const { data, pagination } = await OrderServices.getDraftOrder({
+        const { data, pagination } = await OrderServices.getDraftOrderFromDB({
             userID,
             userRole,
             skip,
@@ -80,9 +80,57 @@ const getDraftOrder = async (req: Request, res: Response) => {
     }
 };
 
+const getAllOrders = async (req: Request, res: Response) => {
+    try {
+        const userID = req.query.userID as string;
+        const role = req.query.role as string;
+        const limit = parseInt(req.query.limit as string) || 10;
+        const page = parseInt(req.query.page as string) || 1;
+        const searchQuery = (req.query.search as string) || "";
+
+        if (!role || !userID) {
+            res.status(400).json({
+                success: false,
+                message: "Role and User ID are required",
+            });
+        }
+
+        const skip = (page - 1) * limit;
+
+        const { orders, total } = await OrderServices.getAllOrdersFromDB({
+            role,
+            userID,
+            skip,
+            limit,
+            searchQuery: searchQuery as string,
+        });
+
+        res.status(200).json({
+            success: true,
+            data: orders,
+            pagination: {
+                total,
+                quantity: limit,
+                page: page,
+                totalPages: Math.ceil(total / limit),
+            },
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "An error occurred while processing your request",
+            error:
+                error instanceof Error
+                    ? error.message
+                    : "Something went wrong! Please try again later.",
+        });
+    }
+};
+
 const OrderControllers = {
     getOrderByID,
     getDraftOrder,
+    getAllOrders,
 };
 
 export default OrderControllers;

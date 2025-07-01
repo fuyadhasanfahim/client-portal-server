@@ -35,7 +35,7 @@ const serviceSchema = new Schema(
     }
 );
 
-const orderSchema = new Schema(
+export const orderSchema = new Schema(
     {
         orderID: {
             type: String,

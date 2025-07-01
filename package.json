@@ -19,6 +19,7 @@
         "dotenv": "^16.5.0",
         "express": "^5.1.0",
         "mongoose": "^8.16.0",
+        "nanoid": "^5.1.5",
         "next-auth": "^4.24.11",
         "nodemailer": "^7.0.3",
         "zod": "^3.25.67"

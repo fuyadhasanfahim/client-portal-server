@@ -12,7 +12,9 @@ const UserSchema: Schema = new Schema<IUser>(
         name: { type: String, required: true },
         username: { type: String, required: true, unique: true },
         email: { type: String, required: true, unique: true },
-        phone: { type: String },
+        phone: { type: String, required: true },
+        address: { type: String },
+        company: { type: String },
         role: {
             type: String,
             enum: ["User", "Admin", "SuperAdmin", "Developer"],

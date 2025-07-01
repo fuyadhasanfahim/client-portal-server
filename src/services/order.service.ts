@@ -132,10 +132,43 @@ const getAllOrdersFromDB = async ({
     }
 };
 
+const getAllOrdersByUserIDFromDB = async ({
+    userID,
+    role,
+}: {
+    userID: string;
+    role: string;
+}) => {
+    try {
+        let orders: (typeof OrderModel)[];
+
+        if (role === "User") {
+            orders = await OrderModel.find({
+                userID,
+            }).sort({
+                createdAt: -1,
+            });
+        } else {
+            orders = await OrderModel.find().sort({
+                createdAt: -1,
+            });
+        }
+
+        return orders;
+    } catch (error) {
+        throw new Error(
+            error instanceof Error
+                ? error.message
+                : "Something went wrong! Please try again later."
+        );
+    }
+};
+
 const OrderServices = {
     getOrderByIDFromDB,
     getDraftOrderFromDB,
     getAllOrdersFromDB,
+    getAllOrdersByUserIDFromDB,
 };
 
 export default OrderServices;

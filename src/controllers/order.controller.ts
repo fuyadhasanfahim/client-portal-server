@@ -127,10 +127,45 @@ const getAllOrders = async (req: Request, res: Response) => {
     }
 };
 
+const getAllOrdersByUserID = async (req: Request, res: Response) => {
+    try {
+        const userID = req.query.userID as string;
+        const role = req.query.role as string;
+
+        if (!userID || !role) {
+            res.status(400).json({
+                success: false,
+                message: "User ID & role is required",
+            });
+            return;
+        }
+
+        const orders = await OrderServices.getAllOrdersByUserIDFromDB({
+            userID,
+            role,
+        });
+
+        res.status(200).json({
+            success: true,
+            data: orders,
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "An error occurred while processing your request",
+            error:
+                error instanceof Error
+                    ? error.message
+                    : "Something went wrong! Please try again later.",
+        });
+    }
+};
+
 const OrderControllers = {
     getOrderByID,
     getDraftOrder,
     getAllOrders,
+    getAllOrdersByUserID,
 };
 
 export default OrderControllers;

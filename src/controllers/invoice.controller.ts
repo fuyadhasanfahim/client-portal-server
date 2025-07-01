@@ -8,7 +8,7 @@ const { frontend_url } = envConfig;
 const sendInvoiceToClientByEmail = async (req: Request, res: Response) => {
     try {
         const { orderID } = req.body;
-        
+
         if (!orderID) {
             res.status(400).json({
                 success: false,
@@ -131,7 +131,7 @@ const sendInvoiceToClientByEmail = async (req: Request, res: Response) => {
 
         res.json({ success: true, message: "Invoice emailed successfully." });
     } catch (error) {
-        console.log(error)
+        console.log(error);
         res.status(500).json({
             success: false,
             message: "Failed to send invoice email.",
@@ -140,6 +140,87 @@ const sendInvoiceToClientByEmail = async (req: Request, res: Response) => {
     }
 };
 
-const InvoiceControllers = { sendInvoiceToClientByEmail };
+const newInvoice = async (req: Request, res: Response) => {
+    try {
+        const {
+            invoiceID,
+            client,
+            company,
+            orders,
+            date,
+            taxRate,
+            subTotal,
+            total,
+            createdBy,
+        } = req.body;
+
+        const invoice = await InvoiceService.saveInvoiceIntoDB({
+            invoiceID,
+            client,
+            company,
+            orders,
+            date,
+            taxRate,
+            subTotal,
+            total,
+            createdBy,
+        });
+
+        res.status(201).json({
+            success: true,
+            message: "Invoice created successfully",
+            data: invoice,
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "Failed to send invoice email.",
+            error: (error as Error).message,
+        });
+    }
+};
+
+const getInvoiceByID = async (req: Request, res: Response) => {
+    try {
+        const { invoiceID } = req.query;
+
+        if (!invoiceID || typeof invoiceID !== "string") {
+            res.status(400).json({
+                success: false,
+                message: "Invoice id is required",
+            });
+            return;
+        }
+
+        const data = await InvoiceService.getInvoiceByIdFromDB(invoiceID);
+
+        if (!data) {
+            res.status(404).json({
+                success: false,
+                message: "Invoice not found",
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            data,
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "An error occurred while processing your request",
+            error:
+                error instanceof Error
+                    ? error.message
+                    : "Something went wrong! Please try again later.",
+        });
+    }
+};
+
+const InvoiceControllers = {
+    sendInvoiceToClientByEmail,
+    newInvoice,
+    getInvoiceByID,
+};
 
 export default InvoiceControllers;

@@ -4,12 +4,14 @@ export default interface IUser {
     name: string;
     username: string;
     email: string;
-    phone?: string;
-    role: 'User' | 'Admin' | 'SuperAdmin' | 'Developer';
+    phone: string;
+    address?: string;
+    company?: string;
+    role: "User" | "Admin" | "SuperAdmin" | "Developer";
     isEmailVerified: boolean;
     password: string;
     oldPasswords?: string[];
-    provider: 'credentials' | 'google';
+    provider: "credentials" | "google";
     googleId?: string;
     emailVerificationToken?: string;
     emailVerificationTokenExpiry?: Date;

@@ -37,8 +37,42 @@ const getUserById = async (req: Request, res: Response) => {
     }
 };
 
+const updateUserInfo = async (req: Request, res: Response) => {
+    try {
+        const { userID, data } = req.body;
+
+        if (!userID || !data) {
+            res.status(400).json({
+                success: false,
+                message: "User ID and data are required",
+            });
+        }
+
+        const updatedData = await UserServices.updateUserInfoIntoDB(
+            userID,
+            data
+        );
+
+        res.status(200).json({
+            success: true,
+            data: updatedData,
+            message: "User information updated successfully",
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "An error occurred while processing your request",
+            error:
+                error instanceof Error
+                    ? error.message
+                    : "Something went wrong! Please try again later.",
+        });
+    }
+};
+
 const UserControllers = {
     getUserById,
+    updateUserInfo,
 };
 
 export default UserControllers;

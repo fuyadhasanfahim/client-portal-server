@@ -1,4 +1,5 @@
 import OrderModel from "../models/order.model";
+import { IOrder } from "../types/order.interface";
 
 const getOrderByIDFromDB = async (orderID: string) => {
     try {
@@ -164,11 +165,45 @@ const getAllOrdersByUserIDFromDB = async ({
     }
 };
 
+const getOrdersByStatusFromDB = async ({
+    role,
+    userID,
+    status,
+}: {
+    role: string;
+    userID: string;
+    status: string;
+}) => {
+    try {
+        let orders: IOrder[] = [];
+
+        if (role === "User") {
+            orders = await OrderModel.find({
+                userID,
+                status,
+            });
+        } else {
+            orders = await OrderModel.find({
+                status,
+            });
+        }
+
+        return orders;
+    } catch (error) {
+        throw new Error(
+            error instanceof Error
+                ? error.message
+                : "Something went wrong! Please try again later."
+        );
+    }
+};
+
 const OrderServices = {
     getOrderByIDFromDB,
     getDraftOrderFromDB,
     getAllOrdersFromDB,
     getAllOrdersByUserIDFromDB,
+    getOrdersByStatusFromDB,
 };
 
 export default OrderServices;

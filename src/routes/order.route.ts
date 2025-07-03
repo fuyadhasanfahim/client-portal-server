@@ -13,4 +13,6 @@ router.get("/get-all-orders-by-user-id", OrderControllers.getAllOrdersByUserID);
 
 router.get("/get-orders-by-status", OrderControllers.getOrdersByStatus);
 
+router.get("/get-orders-for-report-page", OrderControllers.getOrders);
+
 export const orderRoute = router;

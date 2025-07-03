@@ -3,6 +3,7 @@ import { orderRoute } from "./order.route";
 import { userRoute } from "./user.route";
 import { invoiceRoute } from "./invoice.route";
 import { serviceRoute } from "./service.route";
+import { paymentRoute } from "./payment.route";
 
 const router = Router();
 
@@ -22,6 +23,10 @@ const moduleRoutes = [
     {
         path: "/services",
         route: serviceRoute,
+    },
+    {
+        path: "/payments",
+        route: paymentRoute,
     },
 ];
 

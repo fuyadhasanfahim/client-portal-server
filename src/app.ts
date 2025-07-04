@@ -1,4 +1,4 @@
-import express, { Application } from "express";
+import express, { Application, Request, Response } from "express";
 import cors from "cors";
 import bodyParser from "body-parser";
 import router from "./routes";
@@ -21,7 +21,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use("/api", verifyAuth, router);
 
-app.get("/", (_req, res) => {
+app.get("/", (_req: Request, res: Response) => {
     res.send("Server is running successfully!");
 });
 

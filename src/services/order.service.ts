@@ -141,19 +141,23 @@ const getAllOrdersByUserIDFromDB = async ({
     role: string;
 }) => {
     try {
-        let orders: (typeof OrderModel)[];
+        const excludedStatuses = [
+            "Awaiting For Details",
+            "Awaiting For Payment Details",
+        ];
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const filter: any = {
+            orderStatus: { $nin: excludedStatuses },
+        };
 
         if (role === "User") {
-            orders = await OrderModel.find({
-                userID,
-            }).sort({
-                createdAt: -1,
-            });
-        } else {
-            orders = await OrderModel.find().sort({
-                createdAt: -1,
-            });
+            filter.userID = userID;
         }
+
+        const orders: IOrder[] = await OrderModel.find(filter).sort({
+            createdAt: -1,
+        });
 
         return orders;
     } catch (error) {

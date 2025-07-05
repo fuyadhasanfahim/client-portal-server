@@ -13,6 +13,9 @@ const envConfig = {
     auth_secret: process.env.AUTH_SECRET,
     email_user: process.env.EMAIL_USER,
     email_password: process.env.EMAIL_PASS,
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
 };
 
 export default envConfig;

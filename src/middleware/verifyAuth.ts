@@ -14,7 +14,7 @@ export const verifyAuth = async (
     if (!token) {
         res.status(401).json({
             success: false,
-            message: "Unauthorized: No valid token found",
+            message: "Unauthorized! No valid token found",
         });
     }
 

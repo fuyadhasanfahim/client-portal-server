@@ -1,5 +1,7 @@
-export default interface IUser {
-    _id?: string;
+export type UserRole = "user" | "admin";
+export type AuthProvider = "credentials" | "google";
+
+export interface IUser {
     userID: string;
     name: string;
     username: string;
@@ -7,23 +9,43 @@ export default interface IUser {
     phone: string;
     address?: string;
     company?: string;
-    role: "User" | "Admin" | "SuperAdmin" | "Developer";
-    isEmailVerified: boolean;
+
+    role: UserRole;
+    provider: AuthProvider;
+    googleId?: string;
+
     password: string;
     oldPasswords?: string[];
-    provider: "credentials" | "google";
-    googleId?: string;
+
+    isEmailVerified: boolean;
     emailVerificationToken?: string;
     emailVerificationTokenExpiry?: Date;
     forgetPasswordToken?: string;
     forgetPasswordTokenExpiry?: Date;
     isPasswordChanged?: boolean;
     lastPasswordChange?: Date;
+
     lastLogin?: Date;
-    profileImage?: string;
+    image?: string;
+
     isActive: boolean;
     isDeleted: boolean;
     isBlocked: boolean;
+
     createdAt?: Date;
     updatedAt?: Date;
+}
+
+export interface ISanitizedUser {
+    userID: string;
+    name: string;
+    username: string;
+    email: string;
+    phone: string;
+    address?: string;
+    company?: string;
+    role: UserRole;
+    isEmailVerified: boolean;
+    lastLogin?: Date;
+    image?: string;
 }

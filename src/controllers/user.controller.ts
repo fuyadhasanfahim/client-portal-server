@@ -1,29 +1,23 @@
 import { Request, Response } from "express";
 import UserServices from "../services/user.service";
+import { ISanitizedUser } from "../types/user.interface";
 
-const getUserById = async (req: Request, res: Response) => {
+async function getUserInfo(req: Request, res: Response) {
     try {
-        const userID = req.query.user_id as string;
+        const { userID } = req.body;
 
         if (!userID) {
             res.status(400).json({
                 success: false,
-                message: "User ID is required",
+                message: "Something went wrong. Please try again later.",
             });
         }
 
-        const data = await UserServices.getUserByID(userID);
-
-        if (!data) {
-            res.status(404).json({
-                success: false,
-                message: "User not found",
-            });
-        }
+        const userData = await UserServices.getUserInfoFromDB(userID);
 
         res.status(200).json({
             success: true,
-            data,
+            data: userData,
         });
     } catch (error) {
         res.status(500).json({
@@ -35,28 +29,35 @@ const getUserById = async (req: Request, res: Response) => {
                     : "Something went wrong! Please try again later.",
         });
     }
-};
+}
 
-const updateUserInfo = async (req: Request, res: Response) => {
+async function updateUserInfo(req: Request, res: Response) {
     try {
-        const { userID, data } = req.body;
+        const { userID, data } = req.body as {
+            userID: string;
+            data: Partial<ISanitizedUser>;
+        };
 
-        if (!userID || !data) {
+        if (!userID || !data || Object.keys(data).length === 0) {
             res.status(400).json({
                 success: false,
-                message: "User ID and data are required",
+                message:
+                    "Invalid input. Please provide userID and data to update.",
             });
         }
 
-        const updatedData = await UserServices.updateUserInfoIntoDB(
-            userID,
-            data
-        );
+        const updatedUser = await UserServices.updateUserInfoInDB(userID, data);
+
+        if (!updatedUser) {
+            res.status(404).json({
+                success: false,
+                message: "User not found.",
+            });
+        }
 
         res.status(200).json({
             success: true,
-            data: updatedData,
-            message: "User information updated successfully",
+            message: "Information updated successfully.",
         });
     } catch (error) {
         res.status(500).json({
@@ -68,11 +69,91 @@ const updateUserInfo = async (req: Request, res: Response) => {
                     : "Something went wrong! Please try again later.",
         });
     }
-};
+}
+
+async function updateUserPassword(req: Request, res: Response) {
+    try {
+        const { userID, password } = req.body;
+
+        if (!userID || !password) {
+            res.status(400).json({
+                success: false,
+                message:
+                    "Invalid input. Please provide userID and password to update.",
+            });
+        }
+
+        const updatedUser = await UserServices.updateUserPasswordInDB(
+            userID,
+            password
+        );
+
+        if (!updatedUser) {
+            res.status(404).json({
+                success: false,
+                message: "User not found.",
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "Password updated successfully.",
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "An error occurred while processing your request",
+            error:
+                error instanceof Error
+                    ? error.message
+                    : "Something went wrong! Please try again later.",
+        });
+    }
+}
+
+async function uploadAvatar(req: Request, res: Response) {
+    try {
+        const { userID } = req.body;
+        const file = req.file;
+
+        if (!userID || !file) {
+            res.status(400).json({
+                success: false,
+                message: "Please provide userID and avatar image file.",
+            });
+            return;
+        }
+
+        const updatedUser = await UserServices.uploadAvatarInDB(userID, file);
+
+        if (!updatedUser) {
+            res.status(404).json({
+                success: false,
+                message: "User not found.",
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "Avatar uploaded successfully.",
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "An error occurred while processing your request",
+            error:
+                error instanceof Error
+                    ? error.message
+                    : "Something went wrong! Please try again later.",
+        });
+    }
+}
 
 const UserControllers = {
-    getUserById,
+    getUserInfo,
     updateUserInfo,
+    updateUserPassword,
+    uploadAvatar,
 };
 
 export default UserControllers;

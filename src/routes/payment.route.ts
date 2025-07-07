@@ -8,4 +8,9 @@ router.get(
     PaymentController.getPaymentsToDateByStatus
 );
 
+router.get(
+    "/get-payments-amount/:status",
+    PaymentController.getPaymentsByStatus
+);
+
 export const paymentRoute = router;

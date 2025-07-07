@@ -9,14 +9,15 @@ export const verifyAuth = async (
     res: Response,
     next: NextFunction
 ): Promise<void> => {
-    const token = await getToken({ req, secret: auth_secret, raw: true });
+    // const token = await getToken({ req, secret: auth_secret, raw: true });
 
-    if (!token) {
-        res.status(401).json({
-            success: false,
-            message: "Unauthorized! No valid token found",
-        });
-    }
+    // if (!token) {
+    //     res.status(401).json({
+    //         success: false,
+    //         message: "Unauthorized! No valid token found",
+    //     });
+    //     return;
+    // }
 
     try {
         const decoded = await getToken({ req, secret: auth_secret });

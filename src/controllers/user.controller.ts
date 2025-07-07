@@ -1,6 +1,5 @@
 import { Request, Response } from "express";
 import UserServices from "../services/user.service";
-import { ISanitizedUser } from "../types/user.interface";
 
 async function getUserInfo(req: Request, res: Response) {
     try {
@@ -34,12 +33,9 @@ async function getUserInfo(req: Request, res: Response) {
 
 async function updateUserInfo(req: Request, res: Response) {
     try {
-        const { userID, data } = req.body as {
-            userID: string;
-            data: Partial<ISanitizedUser>;
-        };
+        const { userID, data } = req.body
 
-        if (!userID || !data || Object.keys(data).length === 0) {
+        if (!userID || !data) {
             res.status(400).json({
                 success: false,
                 message:
@@ -180,14 +176,6 @@ async function getOrdersByUserID(req: Request, res: Response) {
             sortBy: sortBy as string,
             sortOrder: sortOrder as "asc" | "desc",
         });
-
-        if (response.orders.length === 0) {
-            res.status(404).json({
-                success: false,
-                message: "No order found.",
-            });
-            return;
-        }
 
         res.status(200).json({
             success: true,

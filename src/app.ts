@@ -3,6 +3,7 @@ import cors from "cors";
 import bodyParser from "body-parser";
 import router from "./routes";
 import { verifyAuth } from "./middleware/verifyAuth";
+import cookieParser from "cookie-parser";
 import envConfig from "./config/env.config";
 
 const { frontend_url } = envConfig;
@@ -16,6 +17,7 @@ const corsOptions = {
 
 app.use(express.json());
 app.use(cors(corsOptions));
+app.use(cookieParser());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 

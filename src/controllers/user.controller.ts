@@ -11,6 +11,7 @@ async function getUserInfo(req: Request, res: Response) {
                 success: false,
                 message: "Something went wrong. Please try again later.",
             });
+            return;
         }
 
         const userData = await UserServices.getUserInfoFromDB(userID);
@@ -44,6 +45,7 @@ async function updateUserInfo(req: Request, res: Response) {
                 message:
                     "Invalid input. Please provide userID and data to update.",
             });
+            return;
         }
 
         const updatedUser = await UserServices.updateUserInfoInDB(userID, data);
@@ -53,6 +55,7 @@ async function updateUserInfo(req: Request, res: Response) {
                 success: false,
                 message: "User not found.",
             });
+            return;
         }
 
         res.status(200).json({
@@ -93,6 +96,7 @@ async function updateUserPassword(req: Request, res: Response) {
                 success: false,
                 message: "User not found.",
             });
+            return;
         }
 
         res.status(200).json({
@@ -149,11 +153,64 @@ async function uploadAvatar(req: Request, res: Response) {
     }
 }
 
+async function getOrdersByUserID(req: Request, res: Response) {
+    try {
+        const { userID } = req.params;
+        const {
+            search = "",
+            page = 1,
+            limit = 10,
+            sortBy = "createdAt",
+            sortOrder = "desc",
+        } = req.query;
+
+        if (!userID) {
+            res.status(400).json({
+                success: false,
+                message: "User id, and role not found.",
+            });
+            return;
+        }
+
+        const response = await UserServices.getOrdersByUserIDFromDB({
+            userID: userID as string,
+            search: search as string,
+            page: parseFloat(page as string),
+            limit: parseFloat(limit as string),
+            sortBy: sortBy as string,
+            sortOrder: sortOrder as "asc" | "desc",
+        });
+
+        if (response.orders.length === 0) {
+            res.status(404).json({
+                success: false,
+                message: "No order found.",
+            });
+            return;
+        }
+
+        res.status(200).json({
+            success: true,
+            data: response,
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "An error occurred while processing your request",
+            error:
+                error instanceof Error
+                    ? error.message
+                    : "Something went wrong! Please try again later.",
+        });
+    }
+}
+
 const UserControllers = {
     getUserInfo,
     updateUserInfo,
     updateUserPassword,
     uploadAvatar,
+    getOrdersByUserID,
 };
 
 export default UserControllers;

@@ -1,4 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import cloudinary from "../lib/cloudinary";
+import OrderModel from "../models/order.model";
 import UserModel from "../models/user.model";
 import { ISanitizedUser } from "../types/user.interface";
 import getSanitizeUserData from "../utils/getSanitizeUserData";
@@ -118,11 +120,60 @@ export async function uploadAvatarInDB(
     }
 }
 
+async function getOrdersByUserIDFromDB({
+    userID,
+    search,
+    page,
+    limit,
+    sortBy = "createdAt",
+    sortOrder = "desc",
+}: {
+    userID: string;
+    search?: string;
+    page: number;
+    limit: number;
+    sortBy?: string;
+    sortOrder?: "asc" | "desc";
+}) {
+    try {
+        const query: any = { userID };
+
+        if (search) {
+            query.$or = [{ orderID: { $regex: search, $options: "i" } }];
+        }
+
+        const sort: any = {
+            [sortBy]: sortOrder === "asc" ? 1 : -1,
+        };
+
+        const skip = (page - 1) * limit;
+
+        const [orders, total] = await Promise.all([
+            OrderModel.find(query).sort(sort).skip(skip).limit(limit),
+            OrderModel.countDocuments(query),
+        ]);
+
+        return {
+            orders,
+            total,
+            page,
+            totalPages: Math.ceil(total / limit),
+        };
+    } catch (error) {
+        throw new Error(
+            error instanceof Error
+                ? error.message
+                : "Something went wrong! Please try again later."
+        );
+    }
+}
+
 const UserServices = {
     getUserInfoFromDB,
     updateUserInfoInDB,
     updateUserPasswordInDB,
     uploadAvatarInDB,
+    getOrdersByUserIDFromDB,
 };
 
 export default UserServices;

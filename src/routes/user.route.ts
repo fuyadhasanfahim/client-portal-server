@@ -12,5 +12,6 @@ router.post(
     upload.single("image"),
     UserControllers.uploadAvatar
 );
+router.get("/get-orders/:userID", UserControllers.getOrdersByUserID);
 
 export const userRoute = router;

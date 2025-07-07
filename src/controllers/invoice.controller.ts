@@ -21,11 +21,11 @@ const sendInvoiceToClientByEmail = async (req: Request, res: Response) => {
         if (!user)
             res.status(404).json({ success: false, message: "User not found" });
 
-        const email = user.email;
+        const email = user?.email;
         const invoiceLink = `${frontend_url}/orders/invoice/${orderID}`;
 
         await sendEmail({
-            to: email,
+            to: email!,
             subject: "Your Invoice is Ready",
             html: `<!DOCTYPE html>
                         <html lang="en">

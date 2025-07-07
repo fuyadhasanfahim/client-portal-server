@@ -4,17 +4,22 @@ import { userRoute } from "./user.route";
 import { invoiceRoute } from "./invoice.route";
 import { serviceRoute } from "./service.route";
 import { paymentRoute } from "./payment.route";
+import { adminRoute } from "./admin.route";
 
 const router = Router();
 
 const moduleRoutes = [
     {
-        path: "/orders",
-        route: orderRoute,
-    },
-    {
         path: "/users",
         route: userRoute,
+    },
+    {
+        path: "/admin",
+        route: adminRoute,
+    },
+    {
+        path: "/orders",
+        route: orderRoute,
     },
     {
         path: "/invoices",

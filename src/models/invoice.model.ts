@@ -1,6 +1,6 @@
 import { Schema, model } from "mongoose";
-import { orderSchema } from "./order.model";
 import { IInvoice } from "../types/invoice.interface";
+import { OrderSchema } from "./order.model";
 
 const InvoiceSchema = new Schema<IInvoice>(
     {
@@ -19,7 +19,7 @@ const InvoiceSchema = new Schema<IInvoice>(
             address: String,
             phone: String,
         },
-        orders: [orderSchema],
+        orders: [OrderSchema],
         date: {
             from: { type: Date, required: true },
             to: { type: Date, required: true },

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import cloudinary from "../lib/cloudinary";
-import OrderModel from "../models/order.model";
+import { OrderModel } from "../models/order.model";
 import UserModel from "../models/user.model";
 import { ISanitizedUser } from "../types/user.interface";
 import getSanitizeUserData from "../utils/getSanitizeUserData";

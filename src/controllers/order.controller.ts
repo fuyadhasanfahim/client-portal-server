@@ -1,6 +1,44 @@
 import { Request, Response } from "express";
 import OrderServices from "../services/order.service";
 
+async function newOrder(req: Request, res: Response) {
+    try {
+        const { orderStage } = req.params;
+        const { userID, services, orderID, details, payment } = req.body;
+
+        if (!orderStage || !userID) {
+            res.status(400).json({
+                success: false,
+                message: "User id and order stage is required.",
+            });
+            return;
+        }
+
+        const order = await OrderServices.newOrderInDB({
+            orderStage,
+            userID,
+            services,
+            orderID,
+            details,
+            payment,
+        });
+
+        res.status(201).json({
+            success: true,
+            orderID: order?.orderID as string,
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "An error occurred while processing your request",
+            error:
+                error instanceof Error
+                    ? error.message
+                    : "Something went wrong! Please try again later.",
+        });
+    }
+}
+
 async function getOrders(req: Request, res: Response) {
     try {
         const {
@@ -85,6 +123,6 @@ async function getOrderByID(req: Request, res: Response) {
     }
 }
 
-const OrderControllers = { getOrders, getOrderByID };
+const OrderControllers = { getOrders, getOrderByID, newOrder };
 
 export default OrderControllers;

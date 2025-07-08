@@ -1,5 +1,40 @@
 import { endOfMonth, startOfMonth, parse } from "date-fns";
-import PaymentModel from "../models/payment.model";
+import { PaymentModel } from "../models/payment.model";
+import { IPayment } from "../types/payment.interface";
+import { nanoid } from "nanoid";
+
+async function newPaymentToDB({
+    userID,
+    orderID,
+    paymentOption,
+    amount,
+    currency,
+    tax,
+    totalAmount,
+    status,
+}: Partial<IPayment>) {
+    try {
+        const newPayment = await PaymentModel.create({
+            paymentID: `WBP${nanoid(10).toUpperCase()}`,
+            userID,
+            orderID,
+            paymentOption,
+            amount,
+            currency,
+            tax,
+            totalAmount,
+            status,
+        });
+
+        return newPayment;
+    } catch (error) {
+        throw new Error(
+            error instanceof Error
+                ? error.message
+                : "Something went wrong! Please try again later."
+        );
+    }
+}
 
 const getPaymentsToDateByStatusFromDB = async ({
     status,
@@ -100,6 +135,7 @@ async function getPaymentsByStatusFromDB({
 }
 
 const PaymentServices = {
+    newPaymentToDB,
     getPaymentsToDateByStatusFromDB,
     getPaymentsByStatusFromDB,
 };

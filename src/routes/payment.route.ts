@@ -3,6 +3,8 @@ import PaymentController from "../controllers/payment.controller";
 
 const router = Router();
 
+router.post("/new-payment");
+
 router.get(
     "/get-payments-to-date-by-status",
     PaymentController.getPaymentsToDateByStatus

@@ -1,6 +1,6 @@
 import ServiceModel from "../models/service.model";
 
-const getAllServices = async () => {
+const getServicesFromDB = async () => {
     try {
         const services = await ServiceModel.find();
 
@@ -14,5 +14,5 @@ const getAllServices = async () => {
     }
 };
 
-const ServiceServices = { getAllServices };
+const ServiceServices = { getServicesFromDB };
 export default ServiceServices;

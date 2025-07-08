@@ -1,5 +1,94 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import OrderModel from "../models/order.model";
+import { nanoid } from "nanoid";
+import { OrderModel } from "../models/order.model";
+import UserModel from "../models/user.model";
+import {
+    IOrderDetails,
+    IOrderServiceSelection,
+} from "../types/order.interface";
+import { IPayment } from "../types/payment.interface";
+
+export async function newOrderInDB({
+    orderStage,
+    userID,
+    services,
+    orderID,
+    details,
+    payment,
+}: {
+    orderStage: string;
+    userID: string;
+    services?: IOrderServiceSelection[];
+    orderID?: string;
+    details?: IOrderDetails;
+    payment?: IPayment;
+}) {
+    try {
+        const user = await UserModel.findOne({ userID });
+
+        if (!user) throw new Error("User not found!");
+
+        let order;
+
+        if (orderStage === "services-selected" && services) {
+            order = await OrderModel.create({
+                orderID: `WBO${nanoid(10).toUpperCase()}`,
+                user: {
+                    userID,
+                    name: user.name,
+                    email: user.email,
+                    image: user.image,
+                    company: user.company,
+                    address: user.address,
+                },
+                services,
+                orderStage,
+                paymentStatus: "pending",
+                status: "pending",
+            });
+        }
+
+        // Stage 2: Add order details
+        if (orderStage === "details-provided" && orderID && details) {
+            order = await OrderModel.findOneAndUpdate(
+                { orderID },
+                {
+                    details,
+                    orderStage,
+                },
+                { new: true }
+            );
+        }
+
+        // Stage 3: Finalize order with payment
+        if (orderStage === "payment-completed" && orderID && payment) {
+            order = await OrderModel.findOneAndUpdate(
+                { orderID },
+                {
+                    paymentID: payment.paymentID,
+                    paymentStatus:
+                        payment.status === "succeeded"
+                            ? "paid"
+                            : payment.status,
+                    status:
+                        payment.status === "succeeded"
+                            ? "in-progress"
+                            : "pending",
+                    orderStage,
+                },
+                { new: true }
+            );
+        }
+
+        return order;
+    } catch (error) {
+        throw new Error(
+            error instanceof Error
+                ? error.message
+                : "Something went wrong while processing the order."
+        );
+    }
+}
 
 async function getOrdersFromDB({
     userID,
@@ -72,6 +161,7 @@ async function getOrderByIDFromDB(orderID: string) {
 }
 
 const OrderServices = {
+    newOrderInDB,
     getOrdersFromDB,
     getOrderByIDFromDB,
 };

@@ -1,6 +1,28 @@
 import { Request, Response } from "express";
 import PaymentServices from "../services/payment.service";
-import IPayment from "../types/payment.interface";
+import { IPayment } from "../types/payment.interface";
+
+async function newPayment(req: Request, res: Response) {
+    try {
+        const {
+            userID,
+            orderID,
+            paymentOption,
+            amount,
+            currency,
+            tax,
+            totalAmount,
+            status,
+        } = req.body;
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "Something went wrong!",
+            errorMessage:
+                error instanceof Error ? error.message : String(error),
+        });
+    }
+}
 
 const getPaymentsToDateByStatus = async (req: Request, res: Response) => {
     try {
@@ -125,6 +147,10 @@ async function getPaymentsByStatus(req: Request, res: Response) {
     }
 }
 
-const PaymentController = { getPaymentsToDateByStatus, getPaymentsByStatus };
+const PaymentController = {
+    newPayment,
+    getPaymentsToDateByStatus,
+    getPaymentsByStatus,
+};
 
 export default PaymentController;

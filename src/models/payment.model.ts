@@ -12,7 +12,11 @@ const paymentSchema = new Schema<IPayment>(
         currency: { type: String, required: true },
         tax: { type: Number, required: true },
         totalAmount: { type: Number, required: true },
-        status: { type: String, required: true },
+        status: {
+            type: String,
+            enum: ["pending", "succeeded", "failed", "refunded"],
+            default: "pending",
+        },
     },
     { timestamps: true }
 );

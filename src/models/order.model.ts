@@ -72,6 +72,9 @@ export const OrderSchema = new Schema<IOrder>(
         user: { type: OrderUserSchema, required: true },
         services: { type: [OrderServiceSelectionSchema], required: true },
         details: { type: OrderDetailsSchema },
+        total: {
+            type: Number,
+        },
         status: {
             type: String,
             enum: [

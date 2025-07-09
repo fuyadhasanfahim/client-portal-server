@@ -51,6 +51,7 @@ export interface IOrder extends Document {
     user: IOrderUser;
     services: IOrderServiceSelection[];
     details?: IOrderDetails;
+    total?: number;
     status:
         | "pending"
         | "in-progress"

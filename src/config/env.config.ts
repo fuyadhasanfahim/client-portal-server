@@ -16,6 +16,9 @@ const envConfig = {
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
     api_key: process.env.CLOUDINARY_API_KEY,
     api_secret: process.env.CLOUDINARY_API_SECRET,
+    stripe_secret_key: process.env.STRIPE_SECRET_KEY,
+    stripe_publishable_key: process.env.STRIPE_PUBLISHABLE_KEY,
+    stripe_webhook_secret: process.env.STRIPE_WEBHOOK_SECRET,
 };
 
 export default envConfig;

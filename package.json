@@ -28,6 +28,7 @@
         "next-auth": "^4.24.11",
         "nodemailer": "^6.10.1",
         "socket.io": "^4.8.1",
+        "stripe": "^18.3.0",
         "zod": "^3.25.74"
     },
     "devDependencies": {

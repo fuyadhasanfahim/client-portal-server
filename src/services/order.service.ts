@@ -14,13 +14,15 @@ export async function newOrderInDB({
     services,
     orderID,
     details,
+    total,
     payment,
 }: {
     orderStage: string;
-    userID: string;
+    userID?: string;
     services?: IOrderServiceSelection[];
     orderID?: string;
     details?: IOrderDetails;
+    total?: number;
     payment?: IPayment;
 }) {
     try {
@@ -48,13 +50,24 @@ export async function newOrderInDB({
             });
         }
 
-        // Stage 2: Add order details
         if (orderStage === "details-provided" && orderID && details) {
             order = await OrderModel.findOneAndUpdate(
                 { orderID },
                 {
                     details,
                     orderStage,
+                    total,
+                },
+                { new: true }
+            );
+        }
+
+        if (orderStage === "details-provided" && orderID && total) {
+            order = await OrderModel.findOneAndUpdate(
+                { orderID },
+                {
+                    orderStage,
+                    total,
                 },
                 { new: true }
             );

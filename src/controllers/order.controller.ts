@@ -4,7 +4,7 @@ import OrderServices from "../services/order.service";
 async function newOrder(req: Request, res: Response) {
     try {
         const { orderStage } = req.params;
-        const { userID, services, orderID, details, payment } = req.body;
+        const { userID, services, orderID, details, total, payment } = req.body;
 
         if (!orderStage || !userID) {
             res.status(400).json({
@@ -20,6 +20,7 @@ async function newOrder(req: Request, res: Response) {
             services,
             orderID,
             details,
+            total,
             payment,
         });
 

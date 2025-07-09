@@ -9,6 +9,7 @@ export interface IUser {
     phone: string;
     address?: string;
     company?: string;
+    stripeCustomerId?: string;
 
     role: UserRole;
     provider: AuthProvider;

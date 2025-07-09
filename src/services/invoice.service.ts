@@ -1,5 +1,5 @@
 import InvoiceModel from "../models/invoice.model";
-import OrderModel from "../models/order.model";
+import { OrderModel } from "../models/order.model";
 import UserModel from "../models/user.model";
 import { IOrder } from "../types/order.interface";
 
@@ -7,7 +7,7 @@ const sendInvoiceToClientByEmail = async (orderID: string) => {
     try {
         const order = await OrderModel.findOne({ orderID });
 
-        const user = await UserModel.findOne({ userID: order.userID });
+        const user = await UserModel.findOne({ userID: order?.user.userID });
 
         return user;
     } catch (error) {

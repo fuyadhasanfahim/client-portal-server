@@ -10,6 +10,7 @@ const userSchema = new Schema<IUser & Document>(
         phone: { type: String, required: true },
         address: String,
         company: String,
+        stripeCustomerId: String,
 
         role: { type: String, enum: ["user", "admin"], default: "user" },
         provider: {
@@ -19,7 +20,12 @@ const userSchema = new Schema<IUser & Document>(
         },
         googleId: String,
 
-        password: { type: String, required: true },
+        password: {
+            type: String,
+            required: function () {
+                return !this.googleId;
+            },
+        },
         oldPasswords: [String],
 
         isEmailVerified: { type: Boolean, default: false },

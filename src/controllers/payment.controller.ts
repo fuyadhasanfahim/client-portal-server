@@ -2,6 +2,56 @@ import { Request, Response } from "express";
 import PaymentServices from "../services/payment.service";
 import { IPayment } from "../types/payment.interface";
 
+async function newPayment(req: Request, res: Response) {
+    try {
+        const {
+            userID,
+            orderID,
+            paymentOption,
+            paymentIntentID,
+            customerID,
+            status,
+        } = req.body;
+
+        if (
+            !userID ||
+            !orderID ||
+            !paymentOption ||
+            !paymentIntentID ||
+            !customerID ||
+            !status
+        ) {
+            res.status(400).json({
+                success: false,
+                message: "Missing the required fields.",
+            });
+            return;
+        }
+
+        await PaymentServices.newPaymentInDB({
+            userID,
+            orderID,
+            paymentOption,
+            paymentIntentID,
+            customerID,
+            status,
+        });
+
+        res.status(200).json({
+            success: true,
+        });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({
+            success: false,
+            message:
+                error instanceof Error
+                    ? error.message
+                    : "Internal Server Error",
+        });
+    }
+}
+
 async function getPaymentsByStatus(req: Request, res: Response) {
     try {
         const { status } = req.params;
@@ -52,8 +102,9 @@ async function getPaymentsByStatus(req: Request, res: Response) {
     }
 }
 
-const PaymentController = {
+const PaymentControllers = {
+    newPayment,
     getPaymentsByStatus,
 };
 
-export default PaymentController;
+export default PaymentControllers;

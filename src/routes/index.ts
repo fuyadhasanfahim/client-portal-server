@@ -5,6 +5,7 @@ import { invoiceRoute } from "./invoice.route";
 import { serviceRoute } from "./service.route";
 import { paymentRoute } from "./payment.route";
 import { adminRoute } from "./admin.route";
+import { stripeRoute } from "./stripe.route";
 
 const router = Router();
 
@@ -32,6 +33,10 @@ const moduleRoutes = [
     {
         path: "/payments",
         route: paymentRoute,
+    },
+    {
+        path: "/stripe",
+        route: stripeRoute,
     },
 ];
 

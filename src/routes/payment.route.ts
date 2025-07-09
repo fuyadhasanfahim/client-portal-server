@@ -1,12 +1,12 @@
 import { Router } from "express";
-import PaymentController from "../controllers/payment.controller";
+import PaymentControllers from "../controllers/payment.controller";
 
 const router = Router();
 
-
+router.post("/new-payment", PaymentControllers.newPayment);
 router.get(
     "/get-payments-amount/:status",
-    PaymentController.getPaymentsByStatus
+    PaymentControllers.getPaymentsByStatus
 );
 
 export const paymentRoute = router;

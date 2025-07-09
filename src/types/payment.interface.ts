@@ -5,12 +5,13 @@ export interface IPayment extends Document {
     userID: string;
     orderID: string;
     paymentOption: string;
+    paymentMethod?: string;
     paymentIntentID?: string;
     customerID?: string;
     amount: number;
-    currency: string;
-    tax: number;
-    totalAmount: number;
+    currency?: string;
+    tax?: number;
+    totalAmount?: number;
     status: "pending" | "succeeded" | "failed" | "refunded";
     createdAt: Date;
     updatedAt: Date;

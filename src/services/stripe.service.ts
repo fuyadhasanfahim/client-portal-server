@@ -101,8 +101,8 @@ async function paymentWebhookInDB(session: Stripe.Checkout.Session) {
     const {
         orderID,
         userID,
-        paymentOption = "stripe",
-        paymentMethod = "card",
+        paymentOption,
+        paymentMethod,
     } = metadata;
 
     const existingPayment = await PaymentModel.findOne({ orderID });

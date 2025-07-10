@@ -5,7 +5,7 @@
     "main": "dist/server.js",
     "scripts": {
         "dev": "ts-node-dev --respawn --transpile-only ./src/server.ts",
-        "start": "node dist/server.js",
+        "start": "nodemon dist/server.js",
         "build": "tsc",
         "format": "pnpm exec prettier . --write"
     },
@@ -27,6 +27,7 @@
         "nanoid": "^5.1.5",
         "next-auth": "^4.24.11",
         "nodemailer": "^6.10.1",
+        "nodemon": "^3.1.10",
         "socket.io": "^4.8.1",
         "stripe": "^18.3.0",
         "zod": "^3.25.74"

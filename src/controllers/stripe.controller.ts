@@ -81,13 +81,10 @@ export const paymentWebhook = async (req: Request, res: Response) => {
             return;
         }
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const rawBody = (req as any).rawBody;
-
         let event: Stripe.Event;
         try {
             event = await StripeServices.constructStripeEvent(
-                rawBody,
+                req.body,
                 stripeSignature,
                 envConfig.stripe_webhook_secret!
             );

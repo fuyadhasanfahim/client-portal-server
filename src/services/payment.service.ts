@@ -30,6 +30,7 @@ async function newPaymentInDB({
     });
 
     order.paymentStatus = "pay-later";
+    order.orderStage = "payment-completed";
     await order.save();
 }
 

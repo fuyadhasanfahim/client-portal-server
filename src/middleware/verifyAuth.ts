@@ -29,8 +29,6 @@ export const verifyAuth = async (
         res.status(401).json({ message: "No token found in cookies" });
     }
 
-    console.log(token);
-
     try {
         req.user = token as TokenPayload;
         next();

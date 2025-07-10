@@ -2,9 +2,19 @@
 import cloudinary from "../lib/cloudinary";
 import { OrderModel } from "../models/order.model";
 import UserModel from "../models/user.model";
-import { ISanitizedUser } from "../types/user.interface";
+import { ISanitizedUser, IUser } from "../types/user.interface";
 import getSanitizeUserData from "../utils/getSanitizeUserData";
 import bcrypt from "bcryptjs";
+
+async function getMeFromDB(userID: string) {
+    const user = (await UserModel.findOne({
+        userID,
+    })) as IUser;
+
+    const sanitizeUser = await getSanitizeUserData(user);
+
+    return sanitizeUser;
+}
 
 async function getUserInfoFromDB(userID: string) {
     try {
@@ -169,6 +179,7 @@ async function getOrdersByUserIDFromDB({
 }
 
 const UserServices = {
+    getMeFromDB,
     getUserInfoFromDB,
     updateUserInfoInDB,
     updateUserPasswordInDB,

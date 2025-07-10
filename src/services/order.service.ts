@@ -3,12 +3,13 @@ import { nanoid } from "nanoid";
 import { OrderModel } from "../models/order.model";
 import UserModel from "../models/user.model";
 import {
+    IOrder,
     IOrderDetails,
     IOrderServiceSelection,
 } from "../types/order.interface";
 import { IPayment } from "../types/payment.interface";
 
-export async function newOrderInDB({
+async function newOrderInDB({
     orderStage,
     userID,
     services,
@@ -107,54 +108,55 @@ async function getOrdersFromDB({
     userID,
     role,
     search,
-    page,
-    limit,
+    page = 1,
+    limit = 10,
     sortBy = "createdAt",
     sortOrder = "desc",
+    filter,
 }: {
     userID: string;
     role: string;
     search?: string;
-    page: number;
-    limit: number;
+    page?: number;
+    limit?: number;
     sortBy?: string;
+    filter?: string;
     sortOrder?: "asc" | "desc";
 }) {
-    try {
-        const query: any = {};
+    const query: any = {};
 
-        if (role === "user") {
-            query.userID = userID;
-        }
+    if (role === "user") {
+        query.userID = userID;
+    }
 
-        if (search) {
-            query.$or = [{ orderID: { $regex: search, $options: "i" } }];
-        }
+    if (search) {
+        query.$or = [{ orderID: { $regex: search, $options: "i" } }];
+    }
 
-        const sort: any = {
-            [sortBy]: sortOrder === "asc" ? 1 : -1,
-        };
+    if (filter && filter !== "all") {
+        query.status = filter;
+    }
 
-        const skip = (page - 1) * limit;
+    const sort: any = {
+        [sortBy]: sortOrder === "asc" ? 1 : -1,
+    };
 
-        const [orders, total] = await Promise.all([
-            OrderModel.find(query).sort(sort).skip(skip).limit(limit),
-            OrderModel.countDocuments(query),
-        ]);
+    const skip = (page - 1) * limit;
 
-        return {
-            orders,
+    const [orders, total] = await Promise.all([
+        OrderModel.find(query).sort(sort).skip(skip).limit(limit).lean(),
+        OrderModel.countDocuments(query),
+    ]);
+
+    return {
+        orders,
+        pagination: {
             total,
             page,
+            limit,
             totalPages: Math.ceil(total / limit),
-        };
-    } catch (error) {
-        throw new Error(
-            error instanceof Error
-                ? error.message
-                : "Something went wrong! Please try again later."
-        );
-    }
+        },
+    };
 }
 
 async function getOrderByIDFromDB(orderID: string) {
@@ -173,10 +175,25 @@ async function getOrderByIDFromDB(orderID: string) {
     }
 }
 
+async function updateOrderInDB({
+    orderID,
+    data,
+}: {
+    orderID: string;
+    data: Partial<IOrder>;
+}) {
+    const updatedOrder = await OrderModel.findOneAndUpdate({ orderID }, data, {
+        new: true,
+    });
+
+    return updatedOrder;
+}
+
 const OrderServices = {
     newOrderInDB,
     getOrdersFromDB,
     getOrderByIDFromDB,
+    updateOrderInDB,
 };
 
 export default OrderServices;

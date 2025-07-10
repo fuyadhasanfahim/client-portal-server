@@ -4,6 +4,7 @@ import upload from "../middleware/multer";
 
 const router = Router();
 
+router.get("/me", UserControllers.getMe);
 router.get("/get-info", UserControllers.getUserInfo);
 router.put("/update-info", UserControllers.updateUserInfo);
 router.put("/update-password", UserControllers.updateUserPassword);

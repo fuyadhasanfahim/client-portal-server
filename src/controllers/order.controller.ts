@@ -50,6 +50,7 @@ async function getOrders(req: Request, res: Response) {
             limit = 10,
             sortBy = "createdAt",
             sortOrder = "desc",
+            filter,
         } = req.query;
 
         if (!userID || !role) {
@@ -67,6 +68,7 @@ async function getOrders(req: Request, res: Response) {
             page: parseFloat(page as string),
             limit: parseFloat(limit as string),
             sortBy: sortBy as string,
+            filter: filter as string,
             sortOrder: sortOrder as "asc" | "desc",
         });
 
@@ -124,6 +126,47 @@ async function getOrderByID(req: Request, res: Response) {
     }
 }
 
-const OrderControllers = { getOrders, getOrderByID, newOrder };
+async function updateOrder(req: Request, res: Response) {
+    try {
+        const { orderID } = req.params;
+        const data = req.body;
+
+        if (!orderID || !data) {
+            res.status(400).json({
+                success: false,
+                message: "Order id and data is required.",
+            });
+            return;
+        }
+
+        const updatedOrder = await OrderServices.updateOrderInDB({
+            orderID,
+            data,
+        });
+
+        if (!updatedOrder) {
+            res.status(404).json({
+                success: false,
+                message: "Can't find the order to update.",
+            });
+            return;
+        }
+
+        res.status(200).json({
+            success: true,
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "An error occurred while processing your request",
+            error:
+                error instanceof Error
+                    ? error.message
+                    : "Something went wrong! Please try again later.",
+        });
+    }
+}
+
+const OrderControllers = { getOrders, getOrderByID, newOrder, updateOrder };
 
 export default OrderControllers;

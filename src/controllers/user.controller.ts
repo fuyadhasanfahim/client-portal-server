@@ -1,5 +1,33 @@
 import { Request, Response } from "express";
 import UserServices from "../services/user.service";
+import { AuthenticatedRequest } from "../middleware/verifyAuth";
+
+async function getMe(req: AuthenticatedRequest, res: Response) {
+    try {
+        const userID = req.user?.id as string;
+
+        if (!userID) {
+            res.status(401).json({ message: "Unauthorized: Missing user ID" });
+            return;
+        }
+
+        const user = await UserServices.getMeFromDB(userID);
+
+        res.status(200).json({
+            success: true,
+            data: user,
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "An error occurred while processing your request",
+            error:
+                error instanceof Error
+                    ? error.message
+                    : "Something went wrong! Please try again later.",
+        });
+    }
+}
 
 async function getUserInfo(req: Request, res: Response) {
     try {
@@ -33,7 +61,7 @@ async function getUserInfo(req: Request, res: Response) {
 
 async function updateUserInfo(req: Request, res: Response) {
     try {
-        const { userID, data } = req.body
+        const { userID, data } = req.body;
 
         if (!userID || !data) {
             res.status(400).json({
@@ -194,6 +222,7 @@ async function getOrdersByUserID(req: Request, res: Response) {
 }
 
 const UserControllers = {
+    getMe,
     getUserInfo,
     updateUserInfo,
     updateUserPassword,

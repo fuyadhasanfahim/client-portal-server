@@ -1,35 +1,43 @@
 import { Request, Response, NextFunction } from "express";
-import { getToken } from "next-auth/jwt";
+import jwt from "jsonwebtoken";
 import envConfig from "../config/env.config";
+import { getToken } from "next-auth/jwt";
 
-const { auth_secret } = envConfig;
+const { node_env, auth_secret } = envConfig;
+
+interface TokenPayload extends jwt.JwtPayload {
+    id: string;
+    role: string;
+}
+
+export interface AuthenticatedRequest extends Request {
+    user?: TokenPayload;
+}
 
 export const verifyAuth = async (
-    req: Request,
+    req: AuthenticatedRequest,
     res: Response,
     next: NextFunction
 ): Promise<void> => {
-    // const token = await getToken({ req, secret: auth_secret, raw: true });
+    const token = await getToken({
+        req,
+        secret: auth_secret!,
+        secureCookie: node_env === "production",
+    });
 
-    // if (!token) {
-    //     res.status(401).json({
-    //         success: false,
-    //         message: "Unauthorized! No valid token found",
-    //     });
-    //     return;
-    // }
+    if (!token) {
+        res.status(401).json({ message: "No token found in cookies" });
+    }
+
+    console.log(token);
 
     try {
-        const decoded = await getToken({ req, secret: auth_secret });
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (req as any).user = decoded;
-
+        req.user = token as TokenPayload;
         next();
-    } catch (error) {
+    } catch (err) {
         res.status(401).json({
-            success: false,
-            message: "Invalid token",
-            errorMessage: (error as Error).message,
+            message: "Invalid or expired token",
+            error: err instanceof Error ? err.message : "Unknown error",
         });
     }
 };

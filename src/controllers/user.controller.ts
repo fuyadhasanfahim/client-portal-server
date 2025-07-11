@@ -1,10 +1,10 @@
 import { Request, Response } from "express";
 import UserServices from "../services/user.service";
-import { AuthenticatedRequest } from "../middleware/verifyAuth";
 
-async function getMe(req: AuthenticatedRequest, res: Response) {
+async function getMe(req: Request, res: Response) {
     try {
-        const userID = req.user?.id as string;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const userID = (req as any).user?.id as string;
 
         if (!userID) {
             res.status(401).json({ message: "Unauthorized: Missing user ID" });

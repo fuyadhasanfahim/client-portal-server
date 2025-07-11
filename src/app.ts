@@ -11,16 +11,16 @@ const { frontend_url } = envConfig;
 
 const app: Application = express();
 
-const corsOptions = {
-    origin: frontend_url!,
-    credentials: true,
-};
-
 app.post(
     "/api/stripe/payment-webhook",
     raw({ type: "application/json" }),
     StripeControllers.paymentWebhook
 );
+
+const corsOptions = {
+    origin: frontend_url!,
+    credentials: true,
+};
 
 app.use(express.json());
 app.use(cors(corsOptions));

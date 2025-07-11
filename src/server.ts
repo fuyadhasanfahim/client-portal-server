@@ -12,7 +12,7 @@ async function Server() {
         await connect(database_url as string);
 
         const server = createServer(app);
-        const io = new SocketIOServer({
+        const io = new SocketIOServer(server, {
             cors: {
                 origin: frontend_url,
                 credentials: true,

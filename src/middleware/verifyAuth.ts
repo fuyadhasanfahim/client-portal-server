@@ -9,13 +9,8 @@ interface TokenPayload extends jwt.JwtPayload {
     id: string;
     role: string;
 }
-
-export interface AuthenticatedRequest extends Request {
-    user?: TokenPayload;
-}
-
 export const verifyAuth = async (
-    req: AuthenticatedRequest,
+    req: Request,
     res: Response,
     next: NextFunction
 ): Promise<void> => {
@@ -30,7 +25,8 @@ export const verifyAuth = async (
     }
 
     try {
-        req.user = token as TokenPayload;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (req as any).user = token as TokenPayload;
         next();
     } catch (err) {
         res.status(401).json({

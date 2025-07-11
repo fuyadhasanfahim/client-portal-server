@@ -74,7 +74,6 @@ async function newOrderInDB({
             );
         }
 
-        // Stage 3: Finalize order with payment
         if (orderStage === "payment-completed" && orderID && payment) {
             order = await OrderModel.findOneAndUpdate(
                 { orderID },

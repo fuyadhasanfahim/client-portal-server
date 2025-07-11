@@ -12,7 +12,7 @@ export interface IPayment extends Document {
     currency?: string;
     tax?: number;
     totalAmount?: number;
-    status: "pending" | "succeeded" | "failed" | "refunded";
+    status: "pending" | "succeeded" | "paid" | "failed" | "refunded";
     createdAt: Date;
     updatedAt: Date;
 }

@@ -102,9 +102,48 @@ async function getPaymentsByStatus(req: Request, res: Response) {
     }
 }
 
+async function getPaymentByOrderID(req: Request, res: Response) {
+    try {
+        const { orderID } = req.params;
+
+        if (!orderID) {
+            res.status(400).json({
+                success: false,
+                message: "Order id is required",
+            });
+            return;
+        }
+
+        const payment =
+            await PaymentServices.getPaymentByOrderIDFromDB(orderID);
+
+        if (!payment) {
+            res.status(404).json({
+                success: false,
+                message: "No payment found with this order id.",
+            });
+            return;
+        }
+
+        res.status(200).json({
+            success: true,
+            data: payment,
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message:
+                error instanceof Error
+                    ? error.message
+                    : "Internal Server Error",
+        });
+    }
+}
+
 const PaymentControllers = {
     newPayment,
     getPaymentsByStatus,
+    getPaymentByOrderID,
 };
 
 export default PaymentControllers;

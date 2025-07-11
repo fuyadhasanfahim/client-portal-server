@@ -125,11 +125,15 @@ async function getOrdersFromDB({
     const query: any = {};
 
     if (role === "user") {
-        query.userID = userID;
+        query["user.userID"] = userID;
     }
 
     if (search) {
-        query.$or = [{ orderID: { $regex: search, $options: "i" } }];
+        query.$or = [
+            { orderID: { $regex: search, $options: "i" } },
+            { "user.name": { $regex: search, $options: "i" } },
+            { "user.email": { $regex: search, $options: "i" } },
+        ];
     }
 
     if (filter && filter !== "all") {
@@ -188,11 +192,41 @@ async function updateOrderInDB({
     return updatedOrder;
 }
 
+async function deliverOrderToClient({ orderID }: { orderID: string }) {
+    const order = await OrderModel.findOneAndUpdate(
+        { orderID },
+        { status: "delivered" },
+        { new: true }
+    );
+    return order;
+}
+
+async function reviewOrderToAdmin({ orderID }: { orderID: string }) {
+    const order = await OrderModel.findOneAndUpdate(
+        { orderID },
+        { status: "in-revision" },
+        { new: true }
+    );
+    return order;
+}
+
+async function completeOrderInDB({ orderID }: { orderID: string }) {
+    const order = await OrderModel.findOneAndUpdate(
+        { orderID },
+        { status: "completed" },
+        { new: true }
+    );
+    return order;
+}
+
 const OrderServices = {
     newOrderInDB,
     getOrdersFromDB,
     getOrderByIDFromDB,
     updateOrderInDB,
+    deliverOrderToClient,
+    reviewOrderToAdmin,
+    completeOrderInDB,
 };
 
 export default OrderServices;

@@ -1,11 +1,19 @@
 import nodemailer from "nodemailer";
 import envConfig from "../config/env.config";
 
+interface Attachment {
+    filename: string;
+    content: Buffer | string;
+    contentType?: string;
+    encoding?: string;
+}
+
 interface EmailOptions {
     from?: string;
     to: string;
     subject: string;
     html: string;
+    attachments?: Attachment[];
 }
 
 const { email_user, email_password } = envConfig;
@@ -20,11 +28,18 @@ export const transporter = nodemailer.createTransport({
     },
 });
 
-export const sendEmail = async ({ to, subject, html, from }: EmailOptions) => {
+export const sendEmail = async ({
+    to,
+    subject,
+    html,
+    from,
+    attachments,
+}: EmailOptions) => {
     await transporter.sendMail({
         from: from ? from : email_user,
         to,
         subject,
         html,
+        attachments: attachments || [],
     });
 };

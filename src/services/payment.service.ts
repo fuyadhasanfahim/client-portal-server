@@ -75,9 +75,16 @@ async function getPaymentsByStatusFromDB({
     return payments;
 }
 
+async function getPaymentByOrderIDFromDB(orderID: string) {
+    const payment = await PaymentModel.findOne({ orderID });
+
+    return payment;
+}
+
 const PaymentServices = {
     newPaymentInDB,
     getPaymentsByStatusFromDB,
+    getPaymentByOrderIDFromDB,
 };
 
 export default PaymentServices;

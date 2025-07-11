@@ -23,7 +23,7 @@ const moduleRoutes = [
         route: orderRoute,
     },
     {
-        path: "/invoices",
+        path: "/invoice",
         route: invoiceRoute,
     },
     {

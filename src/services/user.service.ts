@@ -178,6 +178,23 @@ async function getOrdersByUserIDFromDB({
     }
 }
 
+async function getUsersFromDB(role: string) {
+    let users: IUser[];
+    if (role === "admin") {
+        users = await UserModel.find().sort({
+            createdAt: -1,
+        });
+    } else {
+        users = [];
+    }
+
+    const sanitized = await Promise.all(
+        users.map((user) => getSanitizeUserData(user))
+    );
+
+    return sanitized;
+}
+
 const UserServices = {
     getMeFromDB,
     getUserInfoFromDB,
@@ -185,6 +202,7 @@ const UserServices = {
     updateUserPasswordInDB,
     uploadAvatarInDB,
     getOrdersByUserIDFromDB,
+    getUsersFromDB,
 };
 
 export default UserServices;

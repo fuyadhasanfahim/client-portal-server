@@ -31,7 +31,7 @@ async function getMe(req: Request, res: Response) {
 
 async function getUserInfo(req: Request, res: Response) {
     try {
-        const { userID } = req.body;
+        const { userID } = req.params;
 
         if (!userID) {
             res.status(400).json({
@@ -221,6 +221,38 @@ async function getOrdersByUserID(req: Request, res: Response) {
     }
 }
 
+async function getUsers(req: Request, res: Response) {
+    try {
+        const { role } = req.query as {
+            role: string;
+        };
+
+        if (!role) {
+            res.status(400).json({
+                success: false,
+                message: "Role is required.",
+            });
+            return;
+        }
+
+        const users = await UserServices.getUsersFromDB(role);
+
+        res.status(200).json({
+            success: true,
+            users,
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "An error occurred while processing your request",
+            error:
+                error instanceof Error
+                    ? error.message
+                    : "Something went wrong! Please try again later.",
+        });
+    }
+}
+
 const UserControllers = {
     getMe,
     getUserInfo,
@@ -228,6 +260,7 @@ const UserControllers = {
     updateUserPassword,
     uploadAvatar,
     getOrdersByUserID,
+    getUsers,
 };
 
 export default UserControllers;

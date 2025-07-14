@@ -326,6 +326,52 @@ async function completeOrder(req: Request, res: Response) {
     }
 }
 
+async function getOrdersByStatus(req: Request, res: Response) {
+    try {
+        const { status } = req.params;
+        const { userID, role } = req.query as {
+            userID: string;
+            role: string;
+        };
+
+        if (!status || !userID || !role) {
+            res.status(400).json({
+                success: false,
+                message: "User id, status, and role is required.",
+            });
+            return;
+        }
+
+        const orders = await OrderServices.getOrdersByStatusFromDB({
+            userID,
+            role,
+            status,
+        });
+
+        if (!orders) {
+            res.status(404).json({
+                success: false,
+                message: "No order found.",
+            });
+            return;
+        }
+
+        res.status(200).json({
+            success: true,
+            data: orders,
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "An error occurred while processing your request",
+            error:
+                error instanceof Error
+                    ? error.message
+                    : "Internal server error",
+        });
+    }
+}
+
 const OrderControllers = {
     getOrders,
     getOrderByID,
@@ -334,6 +380,7 @@ const OrderControllers = {
     deliverOrder,
     reviewOrder,
     completeOrder,
+    getOrdersByStatus,
 };
 
 export default OrderControllers;

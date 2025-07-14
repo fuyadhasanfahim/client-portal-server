@@ -219,6 +219,31 @@ async function completeOrderInDB({ orderID }: { orderID: string }) {
     return order;
 }
 
+async function getOrdersByStatusFromDB({
+    userID,
+    role,
+    status,
+}: {
+    userID: string;
+    role: string;
+    status: string;
+}) {
+    let orders;
+
+    if (role === "user") {
+        orders = await OrderModel.find({
+            "user.userID": userID,
+            status,
+        });
+    } else {
+        orders = await OrderModel.find({
+            status,
+        });
+    }
+
+    return orders;
+}
+
 const OrderServices = {
     newOrderInDB,
     getOrdersFromDB,
@@ -227,6 +252,7 @@ const OrderServices = {
     deliverOrderToClient,
     reviewOrderToAdmin,
     completeOrderInDB,
+    getOrdersByStatusFromDB,
 };
 
 export default OrderServices;

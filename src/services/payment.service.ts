@@ -1,4 +1,12 @@
-import { endOfMonth, startOfMonth, parse } from "date-fns";
+import {
+    endOfMonth,
+    startOfMonth,
+    parse,
+    subMonths,
+    startOfYear,
+    endOfYear,
+    subYears,
+} from "date-fns";
 import { PaymentModel } from "../models/payment.model";
 import { IPayment } from "../types/payment.interface";
 import { OrderModel } from "../models/order.model";
@@ -34,7 +42,7 @@ async function newPaymentInDB({
     await order.save();
 }
 
-async function getPaymentsByStatusFromDB({
+export async function getPaymentsByStatusFromDB({
     status,
     paymentOption,
     month,
@@ -46,33 +54,59 @@ async function getPaymentsByStatusFromDB({
     month?: string;
     userID?: string;
     role?: string;
-}) {
+}): Promise<{
+    current: IPayment[];
+    previous: IPayment[];
+    payments: IPayment[];
+}> {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const query: Record<string, any> = {
+    const baseQuery: Record<string, any> = {
         paymentOption,
     };
 
-    if (status) {
-        query.status = status;
-    }
+    if (status) baseQuery.status = status;
+    if (role === "user" && userID) baseQuery.userID = userID;
 
-    if (role === "user" && userID) {
-        query.userID = userID;
-    }
+    let currentStart: Date, currentEnd: Date;
+    let previousStart: Date, previousEnd: Date;
 
     if (month) {
-        const monthDate = parse(month, "MMMM", new Date());
-        const start = startOfMonth(monthDate);
-        const end = endOfMonth(monthDate);
+        const parsed = parse(month, "MMMM", new Date());
+        currentStart = startOfMonth(parsed);
+        currentEnd = endOfMonth(parsed);
 
-        query.createdAt = {
-            $gte: start,
-            $lte: end,
-        };
+        const prevDate = subMonths(parsed, 1);
+        previousStart = startOfMonth(prevDate);
+        previousEnd = endOfMonth(prevDate);
+    } else {
+        const now = new Date();
+        currentStart = startOfYear(now);
+        currentEnd = endOfYear(now);
+
+        const prevDate = subYears(now, 1);
+        previousStart = startOfYear(prevDate);
+        previousEnd = endOfYear(prevDate);
     }
 
-    const payments = await PaymentModel.find(query);
-    return payments;
+    const current = await PaymentModel.find({
+        ...baseQuery,
+        createdAt: {
+            $gte: currentStart,
+            $lte: currentEnd,
+        },
+    });
+
+    const previous = await PaymentModel.find({
+        ...baseQuery,
+        createdAt: {
+            $gte: previousStart,
+            $lte: previousEnd,
+        },
+    });
+
+    const payments = await PaymentModel.find(baseQuery);
+
+    return { current, previous, payments };
 }
 
 async function getPaymentByOrderIDFromDB(orderID: string) {

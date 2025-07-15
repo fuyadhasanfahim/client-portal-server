@@ -49,4 +49,7 @@ export interface ISanitizedUser {
     isEmailVerified: boolean;
     lastLogin?: Date;
     image?: string;
+    createdAt?: Date;
+    updatedAt?: Date;
+    provider?: AuthProvider;
 }

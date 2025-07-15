@@ -61,7 +61,8 @@ async function getUserInfo(req: Request, res: Response) {
 
 async function updateUserInfo(req: Request, res: Response) {
     try {
-        const { userID, data } = req.body;
+        const { userID } = req.params;
+        const { data } = req.body;
 
         if (!userID || !data) {
             res.status(400).json({
@@ -100,7 +101,8 @@ async function updateUserInfo(req: Request, res: Response) {
 
 async function updateUserPassword(req: Request, res: Response) {
     try {
-        const { userID, password } = req.body;
+        const { userID } = req.params;
+        const { password } = req.body;
 
         if (!userID || !password) {
             res.status(400).json({
@@ -141,7 +143,7 @@ async function updateUserPassword(req: Request, res: Response) {
 
 async function uploadAvatar(req: Request, res: Response) {
     try {
-        const { userID } = req.body;
+        const { userID } = req.params;
         const file = req.file;
 
         if (!userID || !file) {

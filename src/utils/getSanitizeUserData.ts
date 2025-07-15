@@ -15,6 +15,9 @@ export default async function getSanitizeUserData(
         isEmailVerified,
         lastLogin,
         image,
+        updatedAt,
+        createdAt,
+        provider,
     } = user;
 
     return {
@@ -29,5 +32,8 @@ export default async function getSanitizeUserData(
         isEmailVerified,
         lastLogin,
         image,
+        updatedAt,
+        createdAt,
+        provider,
     };
 }

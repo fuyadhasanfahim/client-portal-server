@@ -115,10 +115,16 @@ async function getPaymentByOrderIDFromDB(orderID: string) {
     return payment;
 }
 
+async function getPaymentsByUserIDFromDB(userID: string) {
+    const payments = await PaymentModel.find({ userID });
+    return payments;
+}
+
 const PaymentServices = {
     newPaymentInDB,
     getPaymentsByStatusFromDB,
     getPaymentByOrderIDFromDB,
+    getPaymentsByUserIDFromDB,
 };
 
 export default PaymentServices;

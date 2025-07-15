@@ -165,10 +165,49 @@ async function getPaymentByOrderID(req: Request, res: Response) {
     }
 }
 
+async function getPaymentsByUserID(req: Request, res: Response) {
+    try {
+        const { userID } = req.params;
+
+        if (!userID) {
+            res.status(400).json({
+                success: false,
+                message: "User id is required",
+            });
+            return;
+        }
+
+        const payments =
+            await PaymentServices.getPaymentsByUserIDFromDB(userID);
+
+        if (!payments || payments.length === 0) {
+            res.status(404).json({
+                success: false,
+                message: "No payments found with this user id.",
+            });
+            return;
+        }
+
+        res.status(200).json({
+            success: true,
+            data: payments,
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message:
+                error instanceof Error
+                    ? error.message
+                    : "Internal Server Error",
+        });
+    }
+}
+
 const PaymentControllers = {
     newPayment,
     getPaymentsByStatus,
     getPaymentByOrderID,
+    getPaymentsByUserID,
 };
 
 export default PaymentControllers;

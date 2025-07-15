@@ -9,6 +9,7 @@ router.get(
     PaymentControllers.getPaymentsByStatus
 );
 router.get("/get-payment/:orderID", PaymentControllers.getPaymentByOrderID);
+router.get("/get-payments/:userID", PaymentControllers.getPaymentsByUserID);
 
 // Post Routes
 router.post("/new-payment", PaymentControllers.newPayment);

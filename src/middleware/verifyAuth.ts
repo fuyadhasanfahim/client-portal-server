@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
-import envConfig from "../config/env.config";
+import envConfig from "../config/env.config.js";
 import { getToken } from "next-auth/jwt";
 
 const { node_env, auth_secret } = envConfig;

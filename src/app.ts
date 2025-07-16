@@ -2,10 +2,10 @@ import express, { Application, raw, Request, Response } from "express";
 import cors from "cors";
 import bodyParser from "body-parser";
 import router from "./routes";
-import { verifyAuth } from "./middleware/verifyAuth";
+import { verifyAuth } from "./middleware/verifyAuth.js";
 import cookieParser from "cookie-parser";
-import envConfig from "./config/env.config";
-import StripeControllers from "./controllers/stripe.controller";
+import envConfig from "./config/env.config.js";
+import StripeControllers from "./controllers/stripe.controller.js";
 
 const { frontend_url } = envConfig;
 

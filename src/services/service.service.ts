@@ -1,4 +1,4 @@
-import ServiceModel from "../models/service.model";
+import ServiceModel from "../models/service.model.js";
 
 const getServicesFromDB = async () => {
     try {

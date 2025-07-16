@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import cloudinary from "../lib/cloudinary";
-import { OrderModel } from "../models/order.model";
-import UserModel from "../models/user.model";
-import { ISanitizedUser, IUser } from "../types/user.interface";
-import getSanitizeUserData from "../utils/getSanitizeUserData";
+import cloudinary from "../lib/cloudinary.js";
+import { OrderModel } from "../models/order.model.js";
+import UserModel from "../models/user.model.js";
+import { ISanitizedUser, IUser } from "../types/user.interface.js";
+import getSanitizeUserData from "../utils/getSanitizeUserData.js";
 import bcrypt from "bcryptjs";
 
 async function getMeFromDB(userID: string) {

@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import UserModel from "../models/user.model";
-import { IUser } from "../types/user.interface";
-import getSanitizeUserData from "../utils/getSanitizeUserData";
+import UserModel from "../models/user.model.js";
+import { IUser } from "../types/user.interface.js";
+import getSanitizeUserData from "../utils/getSanitizeUserData.js";
 
 async function newUserInDB(data: IUser) {
     try {

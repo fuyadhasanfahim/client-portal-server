@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
-import StripeServices from "../services/stripe.service";
+import StripeServices from "../services/stripe.service.js";
 import Stripe from "stripe";
-import envConfig from "../config/env.config";
+import envConfig from "../config/env.config.js";
 
 async function createSetupIntent(req: Request, res: Response) {
     try {

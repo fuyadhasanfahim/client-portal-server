@@ -7,9 +7,9 @@ import {
     endOfYear,
     subYears,
 } from "date-fns";
-import { PaymentModel } from "../models/payment.model";
-import { IPayment } from "../types/payment.interface";
-import { OrderModel } from "../models/order.model";
+import { PaymentModel } from "../models/payment.model.js";
+import { IPayment } from "../types/payment.interface.js";
+import { OrderModel } from "../models/order.model.js";
 import { nanoid } from "nanoid";
 
 async function newPaymentInDB({

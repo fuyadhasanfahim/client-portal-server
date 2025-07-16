@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import AdminServices from "../services/admin.service";
+import AdminServices from "../services/admin.service.js";
 
 async function newUser(req: Request, res: Response) {
     try {

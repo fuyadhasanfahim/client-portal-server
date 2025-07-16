@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
-import InvoiceServices from "../services/invoice.service";
-import { sendEmail } from "../lib/nodemailer";
-import envConfig from "../config/env.config";
-import { getInvoiceEmailTemplate } from "../html-templates/getInvoiceEmailTemplate";
+import InvoiceServices from "../services/invoice.service.js";
+import { sendEmail } from "../lib/nodemailer.js";
+import envConfig from "../config/env.config.js";
+import { getInvoiceEmailTemplate } from "../html-templates/getInvoiceEmailTemplate.js";
 
 async function sendInvoice(req: Request, res: Response) {
     try {

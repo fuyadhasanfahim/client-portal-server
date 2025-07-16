@@ -1,5 +1,5 @@
-import envConfig from "../config/env.config";
-import { IOrder } from "../types/order.interface";
+import envConfig from "../config/env.config.js";
+import { IOrder } from "../types/order.interface.js";
 
 export function getInvoiceEmailTemplate(order: IOrder) {
     return `

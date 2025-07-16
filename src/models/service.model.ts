@@ -1,5 +1,5 @@
 import { model, Schema } from "mongoose";
-import { IComplexity, IService, IType } from "../types/service.interface";
+import { IComplexity, IService, IType } from "../types/service.interface.js";
 
 const complexitySchema = new Schema<IComplexity>({
     name: {

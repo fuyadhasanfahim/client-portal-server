@@ -1,5 +1,5 @@
 import Stripe from "stripe";
-import envConfig from "../config/env.config";
+import envConfig from "../config/env.config.js";
 
 const stripeSecretKey = envConfig.stripe_secret_key!;
 

@@ -6,7 +6,7 @@ import {
     IOrderServiceComplexity,
     IOrderServiceSelection,
     IOrderServiceType,
-} from "../types/order.interface";
+} from "../types/order.interface.js";
 
 const OrderUserSchema = new Schema<IOrderUser>(
     {

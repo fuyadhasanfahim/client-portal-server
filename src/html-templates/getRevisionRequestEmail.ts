@@ -1,4 +1,4 @@
-import envConfig from "../config/env.config";
+import envConfig from "../config/env.config.js";
 
 export function getAdminRevisionEmail(
     orderID: string,

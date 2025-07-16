@@ -1,11 +1,11 @@
 import { Router } from "express";
-import { orderRoute } from "./order.route";
-import { userRoute } from "./user.route";
-import { invoiceRoute } from "./invoice.route";
-import { serviceRoute } from "./service.route";
-import { paymentRoute } from "./payment.route";
-import { adminRoute } from "./admin.route";
-import { stripeRoute } from "./stripe.route";
+import { orderRoute } from "./order.route.js";
+import { userRoute } from "./user.route.js";
+import { invoiceRoute } from "./invoice.route.js";
+import { serviceRoute } from "./service.route.js";
+import { paymentRoute } from "./payment.route.js";
+import { adminRoute } from "./admin.route.js";
+import { stripeRoute } from "./stripe.route.js";
 
 const router = Router();
 

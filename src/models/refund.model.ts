@@ -1,5 +1,5 @@
 import { model, Schema } from "mongoose";
-import { IRefund } from "../types/refund.interface";
+import { IRefund } from "../types/refund.interface.js";
 
 const refundSchema = new Schema<IRefund>(
     {

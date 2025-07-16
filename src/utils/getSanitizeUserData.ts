@@ -1,4 +1,4 @@
-import { ISanitizedUser, IUser } from "../types/user.interface";
+import { ISanitizedUser, IUser } from "../types/user.interface.js";
 
 export default async function getSanitizeUserData(
     user: IUser

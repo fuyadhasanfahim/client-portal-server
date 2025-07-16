@@ -1,11 +1,11 @@
 import { nanoid } from "nanoid";
-import stripe from "../lib/stripe";
-import { OrderModel } from "../models/order.model";
-import UserModel from "../models/user.model";
+import stripe from "../lib/stripe.js";
+import { OrderModel } from "../models/order.model.js";
+import UserModel from "../models/user.model.js";
 import Stripe from "stripe";
-import { PaymentModel } from "../models/payment.model";
-import { sendEmail } from "../lib/nodemailer";
-import envConfig from "../config/env.config";
+import { PaymentModel } from "../models/payment.model.js";
+import { sendEmail } from "../lib/nodemailer.js";
+import envConfig from "../config/env.config.js";
 
 async function createSetupIntentInDB(userID: string, orderID: string) {
     const user = await UserModel.findOne({ userID });

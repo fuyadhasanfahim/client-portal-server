@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
-import PaymentServices from "../services/payment.service";
-import { IPayment } from "../types/payment.interface";
+import PaymentServices from "../services/payment.service.js";
+import { IPayment } from "../types/payment.interface.js";
 
 async function newPayment(req: Request, res: Response) {
     try {

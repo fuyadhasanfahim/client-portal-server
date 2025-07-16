@@ -1,13 +1,13 @@
 import { Request, Response } from "express";
-import OrderServices from "../services/order.service";
-import { sendEmail } from "../lib/nodemailer";
-import { deliveryEmail } from "../html-templates/deliveryEmail";
-import envConfig from "../config/env.config";
+import OrderServices from "../services/order.service.js";
+import { sendEmail } from "../lib/nodemailer.js";
+import { deliveryEmail } from "../html-templates/deliveryEmail.js";
+import envConfig from "../config/env.config.js";
 import {
     getAdminRevisionEmail,
     getCustomerRevisionEmail,
-} from "../html-templates/getRevisionRequestEmail";
-import { getOrderCompletionEmail } from "../html-templates/getOrderCompletionEmail";
+} from "../html-templates/getRevisionRequestEmail.js";
+import { getOrderCompletionEmail } from "../html-templates/getOrderCompletionEmail.js";
 
 async function newOrder(req: Request, res: Response) {
     try {

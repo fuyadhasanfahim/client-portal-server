@@ -1,5 +1,5 @@
 import { Router } from "express";
-import StripeControllers from "../controllers/stripe.controller";
+import StripeControllers from "../controllers/stripe.controller.js";
 
 const router = Router();
 

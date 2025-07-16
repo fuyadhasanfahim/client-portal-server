@@ -1,13 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { nanoid } from "nanoid";
-import { OrderModel } from "../models/order.model";
-import UserModel from "../models/user.model";
+import { OrderModel } from "../models/order.model.js";
+import UserModel from "../models/user.model.js";
 import {
     IOrder,
     IOrderDetails,
     IOrderServiceSelection,
-} from "../types/order.interface";
-import { IPayment } from "../types/payment.interface";
+} from "../types/order.interface.js";
+import { IPayment } from "../types/payment.interface.js";
 
 async function newOrderInDB({
     orderStage,

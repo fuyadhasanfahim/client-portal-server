@@ -57,16 +57,35 @@ async function updateUserInfoInDB(
     }
 }
 
-export async function updateUserPasswordInDB(userID: string, password: string) {
+export async function updateUserPasswordInDB({
+    userID,
+    currentPassword,
+    newPassword,
+}: {
+    userID: string;
+    currentPassword: string;
+    newPassword: string;
+}) {
     try {
         const user = await UserModel.findOne({ userID });
 
-        if (!user) return null;
+        if (!user) {
+            throw new Error("User not found.");
+        }
+
+        const isPasswordValid = await bcrypt.compare(
+            currentPassword,
+            user.password
+        );
+
+        if (!isPasswordValid) {
+            throw new Error("The current password you entered is incorrect.");
+        }
 
         const allOldPasswords = [user.password, ...(user.oldPasswords || [])];
 
         for (const oldHashed of allOldPasswords) {
-            const isSame = await bcrypt.compare(password, oldHashed);
+            const isSame = await bcrypt.compare(newPassword, oldHashed);
             if (isSame) {
                 throw new Error(
                     "New password must be different from previous passwords."
@@ -74,7 +93,7 @@ export async function updateUserPasswordInDB(userID: string, password: string) {
             }
         }
 
-        const hashedNewPassword = await bcrypt.hash(password, 10);
+        const hashedNewPassword = await bcrypt.hash(newPassword, 12);
 
         user.oldPasswords = [...(user.oldPasswords || []), user.password];
         user.password = hashedNewPassword;

@@ -62,7 +62,7 @@ async function getUserInfo(req: Request, res: Response) {
 async function updateUserInfo(req: Request, res: Response) {
     try {
         const { userID } = req.params;
-        const { data } = req.body;
+        const data = req.body;
 
         if (!userID || !data) {
             res.status(400).json({
@@ -102,9 +102,9 @@ async function updateUserInfo(req: Request, res: Response) {
 async function updateUserPassword(req: Request, res: Response) {
     try {
         const { userID } = req.params;
-        const { password } = req.body;
+        const { newPassword, currentPassword } = req.body;
 
-        if (!userID || !password) {
+        if (!userID || !currentPassword || !newPassword) {
             res.status(400).json({
                 success: false,
                 message:
@@ -112,10 +112,11 @@ async function updateUserPassword(req: Request, res: Response) {
             });
         }
 
-        const updatedUser = await UserServices.updateUserPasswordInDB(
+        const updatedUser = await UserServices.updateUserPasswordInDB({
             userID,
-            password
-        );
+            currentPassword,
+            newPassword,
+        });
 
         if (!updatedUser) {
             res.status(404).json({

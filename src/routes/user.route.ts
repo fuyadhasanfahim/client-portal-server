@@ -6,10 +6,10 @@ const router = Router();
 
 router.get("/me", UserControllers.getMe);
 router.get("/get-info/:userID", UserControllers.getUserInfo);
-router.put("/update-info", UserControllers.updateUserInfo);
-router.put("/update-password", UserControllers.updateUserPassword);
-router.post(
-    "/upload-avatar",
+router.put("/update-info/:userID", UserControllers.updateUserInfo);
+router.put("/update-password/:userID", UserControllers.updateUserPassword);
+router.put(
+    "/upload-avatar/:userID",
     upload.single("image"),
     UserControllers.uploadAvatar
 );

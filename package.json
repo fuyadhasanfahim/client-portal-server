@@ -8,6 +8,7 @@
         "start": "nodemon dist/server.js",
         "start-heroku": "npm run build && npm run start",
         "build": "npx tsc",
+        "build:dev": "npx tsc -w",
         "format": "pnpm exec prettier . --write"
     },
     "keywords": [],

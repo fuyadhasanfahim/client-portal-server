@@ -98,12 +98,7 @@ async function paymentWebhookInDB(session: Stripe.Checkout.Session) {
         throw new Error("Missing metadata in session.");
     }
 
-    const {
-        orderID,
-        userID,
-        paymentOption,
-        paymentMethod,
-    } = metadata;
+    const { orderID, userID, paymentOption, paymentMethod } = metadata;
 
     const existingPayment = await PaymentModel.findOne({ orderID });
 

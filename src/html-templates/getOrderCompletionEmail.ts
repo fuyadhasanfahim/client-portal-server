@@ -1,4 +1,7 @@
-export function getOrderCompletionEmail(orderID: string, customerName: string): string {
+export function getOrderCompletionEmail(
+    orderID: string,
+    customerName: string
+): string {
     return `
     <!DOCTYPE html>
     <html>

@@ -1,7 +1,4 @@
-export function deliveryEmail(
-    orderID: string,
-    downloadLink: string
-): string {
+export function deliveryEmail(orderID: string, downloadLink: string): string {
     return `
     <!DOCTYPE html>
     <html>

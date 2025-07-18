@@ -7,12 +7,16 @@ import registerSocketHandlers from "./socket.js";
 
 const { database_url, port, frontend_url } = envConfig;
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export let io: any;
+
 async function Server() {
     try {
         await connect(database_url as string);
 
         const server = createServer(app);
-        const io = new SocketIOServer(server, {
+
+        io = new SocketIOServer(server, {
             cors: {
                 origin: frontend_url,
                 credentials: true,
@@ -22,10 +26,10 @@ async function Server() {
         registerSocketHandlers(io);
 
         server.listen(port, () => {
-            console.log(`Server running on port ${port}`);
+            console.log(`🚀 Server running on port ${port}`);
         });
     } catch (error) {
-        console.error("Error connecting to database:", error);
+        console.error("❌ Error connecting to database:", error);
         process.exit(1);
     }
 }

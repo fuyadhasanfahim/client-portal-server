@@ -86,6 +86,7 @@ async function updateUserInfo(req: Request, res: Response) {
         res.status(200).json({
             success: true,
             message: "Information updated successfully.",
+            data: updatedUser,
         });
     } catch (error) {
         res.status(500).json({

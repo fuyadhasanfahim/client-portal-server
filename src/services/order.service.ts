@@ -8,6 +8,7 @@ import {
     IOrderServiceSelection,
 } from "../types/order.interface.js";
 import { IPayment } from "../types/payment.interface.js";
+import { io } from "../server.js";
 
 async function newOrderInDB({
     orderStage,
@@ -91,6 +92,22 @@ async function newOrderInDB({
                 },
                 { new: true }
             );
+        }
+
+        if (order) {
+            io.to(order.user.userID.toString()).emit("new-order", {
+                orderID: order.orderID,
+                status: order.status,
+                orderStage: order.orderStage,
+                createdAt: order.createdAt,
+            });
+
+            io.to(order.orderID).emit("new-order", {
+                orderID: order.orderID,
+                status: order.status,
+                orderStage: order.orderStage,
+                createdAt: order.createdAt,
+            });
         }
 
         return order;
@@ -189,6 +206,20 @@ async function updateOrderInDB({
         new: true,
     });
 
+    if (!updatedOrder) throw new Error("Order not found");
+
+    io.to(updatedOrder.user.userID).emit("order-status-updated", {
+        orderID: updatedOrder.orderID,
+        status: updatedOrder.status,
+        updatedAt: updatedOrder.updatedAt,
+    });
+
+    io.to(updatedOrder.orderID).emit("order-status-updated", {
+        orderID: updatedOrder.orderID,
+        status: updatedOrder.status,
+        updatedAt: updatedOrder.updatedAt,
+    });
+
     return updatedOrder;
 }
 
@@ -198,6 +229,21 @@ async function deliverOrderToClient({ orderID }: { orderID: string }) {
         { status: "delivered" },
         { new: true }
     );
+
+    if (order) {
+        io.to(order.user.userID).emit("order-status-updated", {
+            orderID: order.orderID,
+            status: order.status,
+            updatedAt: order.updatedAt,
+        });
+
+        io.to(order.orderID).emit("order-status-updated", {
+            orderID: order.orderID,
+            status: order.status,
+            updatedAt: order.updatedAt,
+        });
+    }
+
     return order;
 }
 
@@ -207,6 +253,21 @@ async function reviewOrderToAdmin({ orderID }: { orderID: string }) {
         { status: "in-revision" },
         { new: true }
     );
+
+    if (order) {
+        io.to(order.user.userID).emit("order-status-updated", {
+            orderID: order.orderID,
+            status: order.status,
+            updatedAt: order.updatedAt,
+        });
+
+        io.to(order.orderID).emit("order-status-updated", {
+            orderID: order.orderID,
+            status: order.status,
+            updatedAt: order.updatedAt,
+        });
+    }
+
     return order;
 }
 
@@ -216,6 +277,21 @@ async function completeOrderInDB({ orderID }: { orderID: string }) {
         { status: "completed" },
         { new: true }
     );
+
+    if (order) {
+        io.to(order.user.userID).emit("order-status-updated", {
+            orderID: order.orderID,
+            status: order.status,
+            updatedAt: order.updatedAt,
+        });
+
+        io.to(order.orderID).emit("order-status-updated", {
+            orderID: order.orderID,
+            status: order.status,
+            updatedAt: order.updatedAt,
+        });
+    }
+
     return order;
 }
 

@@ -41,7 +41,6 @@ async function newPayment(req: Request, res: Response) {
             success: true,
         });
     } catch (error) {
-        console.log(error);
         res.status(500).json({
             success: false,
             message:

@@ -130,6 +130,7 @@ async function paymentWebhookInDB(session: Stripe.Checkout.Session) {
         { orderID },
         {
             paymentStatus: "paid",
+            orderStage: "payment-completed",
             paymentID: session.payment_intent?.toString(),
         }
     );

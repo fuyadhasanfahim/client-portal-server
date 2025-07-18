@@ -19,7 +19,13 @@ async function Server() {
         io = new SocketIOServer(server, {
             cors: {
                 origin: frontend_url,
+                methods: ["GET", "POST"],
                 credentials: true,
+            },
+            transports: ["websocket", "polling"],
+            connectionStateRecovery: {
+                maxDisconnectionDuration: 2 * 60 * 1000,
+                skipMiddlewares: true,
             },
         });
 

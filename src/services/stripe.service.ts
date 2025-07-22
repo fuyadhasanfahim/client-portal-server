@@ -14,7 +14,7 @@ async function createSetupIntentInDB(userID: string, orderID: string) {
         throw new Error("User not found with this ID.");
     }
 
-    let customerId = user?.stripeCustomerId;
+    let customerId = user.stripeCustomerId;
     let customer;
 
     if (customerId) {
@@ -23,29 +23,42 @@ async function createSetupIntentInDB(userID: string, orderID: string) {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (err: any) {
             if (err.code === "resource_missing") {
-                // recreate customer if old one was deleted
+                console.warn(
+                    `❌ Stripe customer not found: ${customerId}. Recreating...`
+                );
+
+                user.stripeCustomerId = undefined;
+                await user.save();
+
+                // Recreate Stripe customer
                 customer = await stripe.customers.create({
-                    metadata: { userID, orderID },
+                    metadata: {
+                        userID: String(userID),
+                        orderID: String(orderID),
+                    },
                 });
+
                 customerId = customer.id;
-                if (user) {
-                    user.stripeCustomerId = customerId;
-                    await user.save();
-                }
+
+                user.stripeCustomerId = customerId;
+                await user.save();
             } else {
                 throw err;
             }
         }
-    } else {
+    }
+
+    if (!customer) {
         customer = await stripe.customers.create({
-            metadata: { userID, orderID },
+            metadata: {
+                userID: String(userID),
+                orderID: String(orderID),
+            },
         });
 
         customerId = customer.id;
-        if (user) {
-            user.stripeCustomerId = customerId;
-            await user.save();
-        }
+        user.stripeCustomerId = customerId;
+        await user.save();
     }
 
     const setupIntent = await stripe.setupIntents.create({

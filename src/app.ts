@@ -4,8 +4,8 @@ import bodyParser from "body-parser";
 import router from "./routes/index.js";
 import { verifyAuth } from "./middleware/verifyAuth.js";
 import cookieParser from "cookie-parser";
-import envConfig from "./config/env.config.js";
 import StripeControllers from "./controllers/stripe.controller.js";
+import envConfig from "./config/env.config.js";
 
 const { frontend_url } = envConfig;
 

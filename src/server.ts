@@ -1,9 +1,9 @@
 import { connect } from "mongoose";
-import envConfig from "./config/env.config.js";
 import app from "./app.js";
 import { Server as SocketIOServer } from "socket.io";
 import { createServer } from "http";
 import registerSocketHandlers from "./socket.js";
+import envConfig from "./config/env.config.js";
 
 const { database_url, port, frontend_url } = envConfig;
 

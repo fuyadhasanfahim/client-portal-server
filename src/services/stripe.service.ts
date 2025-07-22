@@ -201,68 +201,10 @@ async function paymentWebhookInDB(session: Stripe.Checkout.Session) {
     }
 }
 
-async function chargeSavedCard({
-    amount,
-    currency = "usd",
-    customerID,
-    paymentMethodID,
-    orderID,
-    userID,
-}: {
-    amount: number;
-    currency?: string;
-    customerID: string;
-    paymentMethodID: string;
-    orderID: string;
-    userID: string;
-}) {
-    try {
-        const paymentIntent = await stripe.paymentIntents.create({
-            amount: Math.round(amount * 100),
-            currency,
-            customer: customerID,
-            payment_method: paymentMethodID,
-            off_session: true,
-            confirm: true,
-            metadata: {
-                orderID,
-                userID,
-            },
-        });
-
-        await PaymentModel.create({
-            userID,
-            orderID,
-            customerID,
-            amount,
-            currency,
-            status: paymentIntent.status,
-            paymentIntentID: paymentIntent.id,
-            paymentMethodID,
-        });
-
-        await OrderModel.findOneAndUpdate(
-            { orderID },
-            {
-                paymentStatus: "paid",
-                orderStage: "payment-completed",
-                paymentID: paymentIntent.id,
-            }
-        );
-
-        return paymentIntent;
-    } catch (error) {
-        throw new Error(
-            error instanceof Error ? error.message : "Failed to charge card"
-        );
-    }
-}
-
 const StripeServices = {
     createSetupIntentInDB,
     newOrderCheckoutInDB,
     constructStripeEvent,
     paymentWebhookInDB,
-    chargeSavedCard,
 };
 export default StripeServices;

@@ -1,6 +1,7 @@
 import { jsPDF } from "jspdf";
-import html2canvas from "html2canvas-pro";
 import { IOrder } from "../types/order.interface.js";
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const html2canvas = require("html2canvas-pro");
 
 export async function generateInvoicePDF(order: IOrder): Promise<Buffer> {
     const tempDiv = document.createElement("div");

@@ -90,7 +90,7 @@ async function newOrderCheckoutInDB(
     const session = await stripe.checkout.sessions.create({
         mode: "payment",
         ui_mode: "embedded",
-        payment_method_types: ["card"],
+        payment_method_types: ["card", "us_bank_account", "paypal"],
         line_items: [
             {
                 price_data: {

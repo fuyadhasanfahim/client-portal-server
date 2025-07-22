@@ -10,6 +10,10 @@ import envConfig from "../config/env.config.js";
 async function createSetupIntentInDB(userID: string, orderID: string) {
     const user = await UserModel.findOne({ userID });
 
+    if (!user) {
+        throw new Error("User not found with this ID.");
+    }
+
     let customerId = user?.stripeCustomerId;
     let customer;
 
@@ -17,7 +21,7 @@ async function createSetupIntentInDB(userID: string, orderID: string) {
         customer = await stripe.customers.retrieve(customerId);
     } else {
         customer = await stripe.customers.create({
-            metadata: { userID, orderID },
+            metadata: { userID: String(userID), orderID: String(orderID) },
         });
 
         customerId = customer.id;

@@ -8,6 +8,7 @@ const paymentSchema = new Schema<IPayment>(
         paymentOption: { type: String, required: true },
         paymentMethod: { type: String },
         paymentIntentID: { type: String },
+        paymentMethodID: { type: String },
         customerID: { type: String },
         amount: { type: Number, required: true },
         currency: { type: String },

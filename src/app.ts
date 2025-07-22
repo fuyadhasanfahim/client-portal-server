@@ -6,6 +6,7 @@ import { verifyAuth } from "./middleware/verifyAuth.js";
 import cookieParser from "cookie-parser";
 import StripeControllers from "./controllers/stripe.controller.js";
 import envConfig from "./config/env.config.js";
+import './jobs/chargeOverduePayments';
 
 const { frontend_url } = envConfig;
 

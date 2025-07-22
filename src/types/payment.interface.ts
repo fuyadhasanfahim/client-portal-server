@@ -7,6 +7,7 @@ export interface IPayment extends Document {
     paymentOption: string;
     paymentMethod?: string;
     paymentIntentID?: string;
+    paymentMethodID?: string;
     customerID?: string;
     amount: number;
     currency?: string;

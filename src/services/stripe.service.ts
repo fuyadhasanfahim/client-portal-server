@@ -18,14 +18,30 @@ async function createSetupIntentInDB(userID: string, orderID: string) {
     let customer;
 
     if (customerId) {
-        customer = await stripe.customers.retrieve(customerId);
+        try {
+            customer = await stripe.customers.retrieve(customerId);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } catch (err: any) {
+            if (err.code === "resource_missing") {
+                // recreate customer if old one was deleted
+                customer = await stripe.customers.create({
+                    metadata: { userID, orderID },
+                });
+                customerId = customer.id;
+                if (user) {
+                    user.stripeCustomerId = customerId;
+                    await user.save();
+                }
+            } else {
+                throw err;
+            }
+        }
     } else {
         customer = await stripe.customers.create({
-            metadata: { userID: String(userID), orderID: String(orderID) },
+            metadata: { userID, orderID },
         });
 
         customerId = customer.id;
-
         if (user) {
             user.stripeCustomerId = customerId;
             await user.save();

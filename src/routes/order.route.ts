@@ -5,6 +5,7 @@ const router = Router();
 
 // Get Routes
 router.get("/get-orders", OrderControllers.getOrders);
+router.get("/get-draft-orders", OrderControllers.getDraftOrders);
 router.get("/get-orders/:orderID", OrderControllers.getOrderByID);
 router.get("/get-orders-by-status/:status", OrderControllers.getOrdersByStatus);
 

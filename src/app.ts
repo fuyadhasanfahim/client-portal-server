@@ -30,7 +30,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use("/api", verifyAuth, router);
 
-app.get("/", (_req: Request, res: Response) => {
+app.get("/asdf", (_req: Request, res: Response) => {
     res.send("Server is running successfully!");
 });
 

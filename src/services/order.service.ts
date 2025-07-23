@@ -139,7 +139,70 @@ async function getOrdersFromDB({
     filter?: string;
     sortOrder?: "asc" | "desc";
 }) {
-    const query: any = {};
+    const query: any = {
+        orderStage: "payment-completed",
+    };
+
+    if (role === "user") {
+        query["user.userID"] = userID;
+    }
+
+    if (search) {
+        query.$or = [
+            { orderID: { $regex: search, $options: "i" } },
+            { "user.name": { $regex: search, $options: "i" } },
+            { "user.email": { $regex: search, $options: "i" } },
+        ];
+    }
+
+    if (filter && filter !== "all") {
+        query.status = filter;
+    }
+
+    const sort: any = {
+        [sortBy]: sortOrder === "asc" ? 1 : -1,
+    };
+
+    const skip = (page - 1) * limit;
+
+    const [orders, total] = await Promise.all([
+        OrderModel.find(query).sort(sort).skip(skip).limit(limit).lean(),
+        OrderModel.countDocuments(query),
+    ]);
+
+    return {
+        orders,
+        pagination: {
+            total,
+            page,
+            limit,
+            totalPages: Math.ceil(total / limit),
+        },
+    };
+}
+
+async function getDraftOrdersFromDB({
+    userID,
+    role,
+    search,
+    page = 1,
+    limit = 10,
+    sortBy = "createdAt",
+    sortOrder = "desc",
+    filter,
+}: {
+    userID: string;
+    role: string;
+    search?: string;
+    page?: number;
+    limit?: number;
+    sortBy?: string;
+    filter?: string;
+    sortOrder?: "asc" | "desc";
+}) {
+    const query: any = {
+        orderStage: { $ne: "payment-completed" },
+    };
 
     if (role === "user") {
         query["user.userID"] = userID;
@@ -323,6 +386,7 @@ async function getOrdersByStatusFromDB({
 const OrderServices = {
     newOrderInDB,
     getOrdersFromDB,
+    getDraftOrdersFromDB,
     getOrderByIDFromDB,
     updateOrderInDB,
     deliverOrderToClient,

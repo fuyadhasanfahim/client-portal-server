@@ -3,7 +3,8 @@ import { IPayment } from "../types/payment.interface.js";
 
 const paymentSchema = new Schema<IPayment>(
     {
-        userID: { type: String, required: true, unique: true },
+        paymentID: { type: String, required: true, unique: true },
+        userID: { type: String, required: true },
         orderID: { type: String, required: true },
         paymentOption: { type: String, required: true },
         paymentMethod: { type: String },

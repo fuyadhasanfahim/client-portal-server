@@ -3,40 +3,6 @@ import StripeServices from "../services/stripe.service.js";
 import Stripe from "stripe";
 import envConfig from "../config/env.config.js";
 
-async function createSetupIntent(req: Request, res: Response) {
-    try {
-        const { userID, orderID } = req.body;
-
-        if (!userID || !orderID) {
-            res.status(400).json({
-                success: false,
-                message: "Order ID and User ID required.",
-            });
-            return;
-        }
-
-        const { client_secret, customer_id } =
-            await StripeServices.createSetupIntentInDB(userID, orderID);
-
-        res.status(200).json({
-            success: true,
-            data: {
-                client_secret,
-                customer_id,
-            },
-        });
-    } catch (error) {
-        console.log(error)
-        res.status(500).json({
-            success: false,
-            message:
-                error instanceof Error
-                    ? error.message
-                    : "Failed to save payment method",
-        });
-    }
-}
-
 async function newOrderCheckout(req: Request, res: Response) {
     try {
         const { orderID, paymentOption, paymentMethod } = req.body;
@@ -115,7 +81,6 @@ export const paymentWebhook = async (req: Request, res: Response) => {
 };
 
 const StripeControllers = {
-    createSetupIntent,
     newOrderCheckout,
     paymentWebhook,
 };

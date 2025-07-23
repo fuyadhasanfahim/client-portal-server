@@ -96,6 +96,54 @@ async function getOrders(req: Request, res: Response) {
     }
 }
 
+async function getDraftOrders(req: Request, res: Response) {
+    try {
+        const {
+            userID,
+            role,
+            search = "",
+            page = 1,
+            limit = 10,
+            sortBy = "createdAt",
+            sortOrder = "desc",
+            filter,
+        } = req.query;
+
+        if (!userID || !role) {
+            res.status(400).json({
+                success: false,
+                message: "User id, and role not found.",
+            });
+            return;
+        }
+
+        const response = await OrderServices.getDraftOrdersFromDB({
+            userID: userID as string,
+            role: role as string,
+            search: search as string,
+            page: parseFloat(page as string),
+            limit: parseFloat(limit as string),
+            sortBy: sortBy as string,
+            filter: filter as string,
+            sortOrder: sortOrder as "asc" | "desc",
+        });
+
+        res.status(200).json({
+            success: true,
+            data: response,
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "An error occurred while processing your request",
+            error:
+                error instanceof Error
+                    ? error.message
+                    : "Something went wrong! Please try again later.",
+        });
+    }
+}
+
 async function getOrderByID(req: Request, res: Response) {
     try {
         const { orderID } = req.params;
@@ -374,6 +422,7 @@ async function getOrdersByStatus(req: Request, res: Response) {
 
 const OrderControllers = {
     getOrders,
+    getDraftOrders,
     getOrderByID,
     newOrder,
     updateOrder,

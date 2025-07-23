@@ -17,8 +17,6 @@ async function newPayment(req: Request, res: Response) {
             !userID ||
             !orderID ||
             !paymentOption ||
-            !paymentIntentID ||
-            !customerID ||
             !status
         ) {
             res.status(400).json({

@@ -123,7 +123,7 @@ export async function uploadAvatarInDB(
                 cloudinary.uploader
                     .upload_stream(
                         {
-                            folder: `client-portal/${user.name}`,
+                            folder: `client-portal/avatar/${user.userID}`,
                             public_id: "image",
                             overwrite: true,
                         },

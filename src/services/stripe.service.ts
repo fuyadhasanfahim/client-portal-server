@@ -7,71 +7,6 @@ import { PaymentModel } from "../models/payment.model.js";
 import { sendEmail } from "../lib/nodemailer.js";
 import envConfig from "../config/env.config.js";
 
-async function createSetupIntentInDB(userID: string, orderID: string) {
-    const user = await UserModel.findOne({ userID });
-
-    if (!user) {
-        throw new Error("User not found with this ID.");
-    }
-
-    let customerId = user.stripeCustomerId;
-    let customer;
-
-    if (customerId) {
-        try {
-            customer = await stripe.customers.retrieve(customerId);
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        } catch (err: any) {
-            if (err.code === "resource_missing") {
-                console.warn(
-                    `❌ Stripe customer not found: ${customerId}. Recreating...`
-                );
-
-                user.stripeCustomerId = undefined;
-                await user.save();
-
-                // Recreate Stripe customer
-                customer = await stripe.customers.create({
-                    metadata: {
-                        userID: String(userID),
-                        orderID: String(orderID),
-                    },
-                });
-
-                customerId = customer.id;
-
-                user.stripeCustomerId = customerId;
-                await user.save();
-            } else {
-                throw err;
-            }
-        }
-    }
-
-    if (!customer) {
-        customer = await stripe.customers.create({
-            metadata: {
-                userID: String(userID),
-                orderID: String(orderID),
-            },
-        });
-
-        customerId = customer.id;
-        user.stripeCustomerId = customerId;
-        await user.save();
-    }
-
-    const setupIntent = await stripe.setupIntents.create({
-        customer: customerId,
-        usage: "off_session",
-    });
-
-    return {
-        client_secret: setupIntent.client_secret,
-        customer_id: customerId,
-    };
-}
-
 async function newOrderCheckoutInDB(
     orderID: string,
     paymentOption: string,
@@ -88,7 +23,7 @@ async function newOrderCheckoutInDB(
     const orderSessionId = `PAYMENT-${nanoid(10)}`;
 
     const session = await stripe.checkout.sessions.create({
-        mode: "subscription",
+        mode: "payment",
         ui_mode: "embedded",
         payment_method_types: ["card"],
         line_items: [
@@ -202,7 +137,6 @@ async function paymentWebhookInDB(session: Stripe.Checkout.Session) {
 }
 
 const StripeServices = {
-    createSetupIntentInDB,
     newOrderCheckoutInDB,
     constructStripeEvent,
     paymentWebhookInDB,

@@ -6,6 +6,7 @@ import { serviceRoute } from "./service.route.js";
 import { paymentRoute } from "./payment.route.js";
 import { adminRoute } from "./admin.route.js";
 import { stripeRoute } from "./stripe.route.js";
+import { paypalRoute } from "./paypal.route.js";
 
 const router = Router();
 
@@ -37,6 +38,10 @@ const moduleRoutes = [
     {
         path: "/stripe",
         route: stripeRoute,
+    },
+    {
+        path: "/paypal",
+        route: paypalRoute,
     },
 ];
 

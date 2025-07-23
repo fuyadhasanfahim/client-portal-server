@@ -217,7 +217,7 @@ router.post("/:orderID/capture", async (req, res) => {
             }
         );
 
-        const order = await OrderModel.findOne({ orderID });
+        const order = await OrderModel.findOne({ paymentID: orderID });
         if (!order) {
             res.status(404).json({ error: "Order not found" });
             return;
@@ -227,15 +227,17 @@ router.post("/:orderID/capture", async (req, res) => {
             order.paymentStatus = "paid";
             order.orderStage = "payment-completed";
             await order.save();
-        }
 
-        res.json({
-            status: response.data.status,
-            orderStatus: order.status,
-            paymentStatus: order.paymentStatus,
-            captureDetails:
-                response.data.purchase_units[0].payments.captures[0],
-        });
+            const captureDetails =
+                response.data.purchase_units[0].payments.captures[0];
+            res.json({
+                status: response.data.status,
+                orderStatus: order.status,
+                paymentStatus: order.paymentStatus,
+                captureDetails,
+                paypalOrderID: orderID,
+            });
+        }
     } catch (error: any) {
         console.error(
             "PayPal Capture Failed",

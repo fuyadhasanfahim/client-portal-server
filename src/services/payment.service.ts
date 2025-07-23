@@ -16,9 +16,12 @@ async function newPaymentInDB({
     userID,
     orderID,
     paymentOption,
+    paymentMethodID,
     paymentIntentID,
     customerID,
     status,
+    amount,
+    currency,
 }: Partial<IPayment>) {
     const order = await OrderModel.findOne({ orderID });
 
@@ -26,20 +29,28 @@ async function newPaymentInDB({
         throw new Error("Order not found with this order id.");
     }
 
-    await PaymentModel.create({
-        paymentID: `WBP${nanoid(10)}`,
+    const paymentID = paymentMethodID ? paymentMethodID : `WBP${nanoid(10)}`;
+
+    const payment = await PaymentModel.create({
+        paymentID,
         userID,
         orderID,
         paymentOption,
+        paymentMethodID,
         paymentIntentID,
         customerID,
         status: status as "pending" | "succeeded" | "failed" | "refunded",
-        amount: order.total,
+        amount,
+        currency,
     });
 
-    order.paymentStatus = "pay-later";
+    order.paymentID = paymentID;
+    order.paymentStatus =
+        status === "succeeded" || status === "paid" ? "paid" : "pending";
     order.orderStage = "payment-completed";
     await order.save();
+
+    return payment;
 }
 
 export async function getPaymentsByStatusFromDB({

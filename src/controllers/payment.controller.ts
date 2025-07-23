@@ -8,17 +8,16 @@ async function newPayment(req: Request, res: Response) {
             userID,
             orderID,
             paymentOption,
+            paymentMethodID,
             paymentIntentID,
             customerID,
             status,
+            amount,
+            currency
         } = req.body;
+        console.log(amount);
 
-        if (
-            !userID ||
-            !orderID ||
-            !paymentOption ||
-            !status
-        ) {
+        if (!userID || !orderID || !paymentOption || !status) {
             res.status(400).json({
                 success: false,
                 message: "Missing the required fields.",
@@ -30,9 +29,12 @@ async function newPayment(req: Request, res: Response) {
             userID,
             orderID,
             paymentOption,
+            paymentMethodID,
             paymentIntentID,
             customerID,
             status,
+            amount,
+            currency
         });
 
         res.status(200).json({

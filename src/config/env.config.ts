@@ -22,7 +22,7 @@ const envConfig = {
     paypal_mode: process.env.PAYPAL_MODE,
     paypal_client_id: process.env.PAYPAL_CLIENT_ID,
     paypal_client_secret: process.env.PAYPAL_CLIENT_SECRET,
-    pay_pal_api_base_url: process.env.PAYPAL_API_BASE_URL,
+    paypal_api_base_url: process.env.PAYPAL_API_BASE_URL,
 };
 
 export default envConfig;

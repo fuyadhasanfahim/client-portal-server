@@ -48,10 +48,6 @@ const moduleRoutes = [
         path: "/paypal",
         route: paypalRoute,
     },
-    {
-        path: "/upload",
-        route: uploadRoute,
-    },
 ];
 
 moduleRoutes.forEach(({ path, route }) => {

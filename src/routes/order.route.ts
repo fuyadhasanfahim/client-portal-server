@@ -8,6 +8,7 @@ router.get("/get-orders", OrderControllers.getOrders);
 router.get("/get-draft-orders", OrderControllers.getDraftOrders);
 router.get("/get-orders/:orderID", OrderControllers.getOrderByID);
 router.get("/get-orders-by-status/:status", OrderControllers.getOrdersByStatus);
+router.get("/get-orders-by-user", OrderControllers.getOrdersByUserID);
 
 // Post Routes
 router.post("/new-order/:orderStage", OrderControllers.newOrder);

@@ -1,40 +1,38 @@
 import { Request, Response } from "express";
-import OrderServices from "../services/order.service.js";
-import { sendEmail } from "../lib/nodemailer.js";
-import { deliveryEmail } from "../html-templates/deliveryEmail.js";
+import QuoteServices from "../services/quote.service.js";
 import envConfig from "../config/env.config.js";
+import { deliveryEmail } from "../html-templates/deliveryEmail.js";
+import { sendEmail } from "../lib/nodemailer.js";
 import {
     getAdminRevisionEmail,
     getCustomerRevisionEmail,
 } from "../html-templates/getRevisionRequestEmail.js";
-import { getOrderCompletionEmail } from "../html-templates/getOrderCompletionEmail.js";
+import { getQuoteCompletionEmail } from "../html-templates/getQuoteCompletionEmail.js";
 
-async function newOrder(req: Request, res: Response) {
+async function newQuote(req: Request, res: Response) {
     try {
-        const { orderStage } = req.params;
-        const { userID, services, orderID, details, total, payment } = req.body;
+        const { quoteStage } = req.params;
+        const { userID, services, quoteID, details } = req.body;
 
-        if (!orderStage || !userID) {
+        if (!quoteStage || !userID) {
             res.status(400).json({
                 success: false,
-                message: "User id and order stage is required.",
+                message: "User id and quote stage is required.",
             });
             return;
         }
 
-        const order = await OrderServices.newOrderInDB({
-            orderStage,
+        const quote = await QuoteServices.newQuoteInDB({
+            quoteStage,
             userID,
             services,
-            orderID,
+            quoteID,
             details,
-            total,
-            payment,
         });
 
         res.status(201).json({
             success: true,
-            orderID: order?.orderID as string,
+            quoteID: quote?.quoteID as string,
         });
     } catch (error) {
         res.status(500).json({
@@ -48,7 +46,7 @@ async function newOrder(req: Request, res: Response) {
     }
 }
 
-async function getOrders(req: Request, res: Response) {
+async function getQuotes(req: Request, res: Response) {
     try {
         const {
             userID,
@@ -57,7 +55,7 @@ async function getOrders(req: Request, res: Response) {
             page = 1,
             limit = 10,
             sortBy = "createdAt",
-            sortOrder = "desc",
+            sortQuote = "desc",
             filter,
         } = req.query;
 
@@ -69,7 +67,7 @@ async function getOrders(req: Request, res: Response) {
             return;
         }
 
-        const response = await OrderServices.getOrdersFromDB({
+        const response = await QuoteServices.getQuotesFromDB({
             userID: userID as string,
             role: role as string,
             search: search as string,
@@ -77,7 +75,7 @@ async function getOrders(req: Request, res: Response) {
             limit: parseFloat(limit as string),
             sortBy: sortBy as string,
             filter: filter as string,
-            sortOrder: sortOrder as "asc" | "desc",
+            sortQuote: sortQuote as "asc" | "desc",
         });
 
         res.status(200).json({
@@ -96,84 +94,36 @@ async function getOrders(req: Request, res: Response) {
     }
 }
 
-async function getDraftOrders(req: Request, res: Response) {
+async function getQuoteByID(req: Request, res: Response) {
     try {
-        const {
-            userID,
-            role,
-            search = "",
-            page = 1,
-            limit = 10,
-            sortBy = "createdAt",
-            sortOrder = "desc",
-            filter,
-        } = req.query;
+        const { quoteID } = req.params;
 
-        if (!userID || !role) {
+        if (!quoteID) {
             res.status(400).json({
                 success: false,
-                message: "User id, and role not found.",
+                message: "Quote ID is required.",
             });
             return;
         }
 
-        const response = await OrderServices.getDraftOrdersFromDB({
-            userID: userID as string,
-            role: role as string,
-            search: search as string,
-            page: parseFloat(page as string),
-            limit: parseFloat(limit as string),
-            sortBy: sortBy as string,
-            filter: filter as string,
-            sortOrder: sortOrder as "asc" | "desc",
-        });
+        const quote = await QuoteServices.getQuoteByIDFromDB(quoteID);
 
-        res.status(200).json({
-            success: true,
-            data: response,
-        });
-    } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: "An error occurred while processing your request",
-            error:
-                error instanceof Error
-                    ? error.message
-                    : "Something went wrong! Please try again later.",
-        });
-    }
-}
-
-async function getOrderByID(req: Request, res: Response) {
-    try {
-        const { orderID } = req.params;
-
-        if (!orderID) {
-            res.status(400).json({
-                success: false,
-                message: "Order id is required.",
-            });
-            return;
-        }
-
-        const order = await OrderServices.getOrderByIDFromDB(orderID);
-
-        if (!order) {
+        if (!quote) {
             res.status(404).json({
                 success: false,
-                message: "No order found.",
+                message: "Quote not found.",
             });
             return;
         }
 
         res.status(200).json({
             success: true,
-            data: order,
+            data: quote,
         });
     } catch (error) {
         res.status(500).json({
             success: false,
-            message: "An error occurred while processing your request",
+            message: "An error occurred while fetching the quote",
             error:
                 error instanceof Error
                     ? error.message
@@ -182,28 +132,28 @@ async function getOrderByID(req: Request, res: Response) {
     }
 }
 
-async function updateOrder(req: Request, res: Response) {
+async function updateQuote(req: Request, res: Response) {
     try {
-        const { orderID } = req.params;
+        const { quoteID } = req.params;
         const data = req.body;
 
-        if (!orderID || !data) {
+        if (!quoteID || !data) {
             res.status(400).json({
                 success: false,
-                message: "Order id and data is required.",
+                message: "Quote id and data is required.",
             });
             return;
         }
 
-        const updatedOrder = await OrderServices.updateOrderInDB({
-            orderID,
+        const updatedQuote = await QuoteServices.updateQuoteInDB({
+            quoteID,
             data,
         });
 
-        if (!updatedOrder) {
+        if (!updatedQuote) {
             res.status(404).json({
                 success: false,
-                message: "Can't find the order to update.",
+                message: "Can't find the quote to update.",
             });
             return;
         }
@@ -223,39 +173,39 @@ async function updateOrder(req: Request, res: Response) {
     }
 }
 
-async function deliverOrder(req: Request, res: Response) {
+async function deliverQuote(req: Request, res: Response) {
     try {
-        const { orderID, downloadLink } = req.body;
+        const { quoteID, downloadLink } = req.body;
 
-        if (!orderID || !downloadLink) {
+        if (!quoteID || !downloadLink) {
             res.status(400).json({
                 success: false,
                 message:
-                    "Order ID, and download link information are all required.",
+                    "Quote ID, and download link information are all required.",
             });
             return;
         }
 
-        const order = await OrderServices.deliverOrderToClient({ orderID });
+        const quote = await QuoteServices.deliverQuoteToClient({ quoteID });
 
-        if (!order) {
+        if (!quote) {
             res.status(404).json({
                 success: false,
-                message: "Order not found",
+                message: "Quote not found",
             });
             return;
         }
 
         await sendEmail({
-            to: order.user.email,
+            to: quote.user.email,
             from: envConfig.email_user!,
-            subject: `Your Order #${orderID} Has Been Delivered!`,
-            html: deliveryEmail(orderID, downloadLink),
+            subject: `Your Quote #${quoteID} Has Been Delivered!`,
+            html: deliveryEmail(quoteID, downloadLink),
         });
 
         res.status(200).json({
             success: true,
-            message: "Order delivered successfully and customer notified.",
+            message: "Quote delivered successfully and customer notified.",
         });
     } catch (error) {
         res.status(500).json({
@@ -269,45 +219,45 @@ async function deliverOrder(req: Request, res: Response) {
     }
 }
 
-async function reviewOrder(req: Request, res: Response) {
+async function reviewQuote(req: Request, res: Response) {
     try {
-        const { orderID, instructions } = req.body;
+        const { quoteID, instructions } = req.body;
 
-        if (!orderID || !instructions) {
+        if (!quoteID || !instructions) {
             res.status(400).json({
                 success: false,
-                message: "Order ID and instructions are required.",
+                message: "Quote ID and instructions are required.",
             });
             return;
         }
 
-        const order = await OrderServices.reviewOrderToAdmin({
-            orderID,
+        const quote = await QuoteServices.reviewQuoteToAdmin({
+            quoteID,
         });
 
-        if (!order) {
+        if (!quote) {
             res.status(404).json({
                 success: false,
-                message: "Order not found",
+                message: "Quote not found",
             });
             return;
         }
 
         await sendEmail({
-            to: order.user.email,
+            to: quote.user.email,
             from: envConfig.email_user!,
-            subject: `Revision Request Submitted for Order #${orderID}`,
-            html: getCustomerRevisionEmail(orderID, order.user.name),
+            subject: `Revision Request Submitted for Quote #${quoteID}`,
+            html: getCustomerRevisionEmail(quoteID, quote.user.name),
         });
 
         await sendEmail({
             to: envConfig.email_user!,
-            from: order.user.email,
-            subject: `[ACTION REQUIRED] Revision Request for Order #${orderID}`,
+            from: quote.user.email,
+            subject: `[ACTION REQUIRED] Revision Request for Quote #${quoteID}`,
             html: getAdminRevisionEmail(
-                orderID,
-                order.user.name,
-                order.user.email,
+                quoteID,
+                quote.user.name,
+                quote.user.email,
                 instructions
             ),
         });
@@ -328,39 +278,39 @@ async function reviewOrder(req: Request, res: Response) {
     }
 }
 
-async function completeOrder(req: Request, res: Response) {
+async function completeQuote(req: Request, res: Response) {
     try {
-        const { orderID } = req.body;
+        const { quoteID } = req.body;
 
-        if (!orderID) {
+        if (!quoteID) {
             res.status(400).json({
                 success: false,
-                message: "Order ID is required.",
+                message: "Quote ID is required.",
             });
             return;
         }
 
-        const order = await OrderServices.completeOrderInDB({ orderID });
+        const quote = await QuoteServices.completeQuoteInDB({ quoteID });
 
-        if (!order) {
+        if (!quote) {
             res.status(404).json({
                 success: false,
-                message: "Order not found",
+                message: "Quote not found",
             });
             return;
         }
 
         await sendEmail({
-            to: order.user.email,
+            to: quote.user.email,
             from: envConfig.email_user!,
-            subject: `Order #${orderID} Completed!`,
-            html: getOrderCompletionEmail(orderID, order.user.name),
+            subject: `Quote #${quoteID} Completed!`,
+            html: getQuoteCompletionEmail(quoteID, quote.user.name),
         });
 
         res.status(200).json({
             success: true,
-            message: "Order marked as completed successfully.",
-            data: order,
+            message: "Quote marked as completed successfully.",
+            data: quote,
         });
     } catch (error) {
         res.status(500).json({
@@ -374,7 +324,7 @@ async function completeOrder(req: Request, res: Response) {
     }
 }
 
-async function getOrdersByStatus(req: Request, res: Response) {
+async function getQuotesByStatus(req: Request, res: Response) {
     try {
         const { status } = req.params;
         const { userID, role } = req.query as {
@@ -390,23 +340,23 @@ async function getOrdersByStatus(req: Request, res: Response) {
             return;
         }
 
-        const orders = await OrderServices.getOrdersByStatusFromDB({
+        const quotes = await QuoteServices.getQuotesByStatusFromDB({
             userID,
             role,
             status,
         });
 
-        if (!orders) {
+        if (!quotes) {
             res.status(404).json({
                 success: false,
-                message: "No order found.",
+                message: "No quote found.",
             });
             return;
         }
 
         res.status(200).json({
             success: true,
-            data: orders,
+            data: quotes,
         });
     } catch (error) {
         res.status(500).json({
@@ -420,7 +370,7 @@ async function getOrdersByStatus(req: Request, res: Response) {
     }
 }
 
-async function getOrdersByUserID(req: Request, res: Response) {
+async function getQuotesByUserID(req: Request, res: Response) {
     try {
         const {
             userID,
@@ -439,8 +389,8 @@ async function getOrdersByUserID(req: Request, res: Response) {
             return;
         }
 
-        const { orders, pagination } =
-            await OrderServices.getOrdersByUserIDFromDB({
+        const { quotes, pagination } =
+            await QuoteServices.getQuotesByUserIDFromDB({
                 userID: userID as string,
                 search: search as string,
                 page: parseFloat(page as string),
@@ -449,17 +399,17 @@ async function getOrdersByUserID(req: Request, res: Response) {
                 sort: sort as string,
             });
 
-        if (!orders || orders.length === 0) {
+        if (!quotes || quotes.length === 0) {
             res.status(404).json({
                 success: false,
-                message: "No orders found for this user.",
+                message: "No quotes found for this user.",
             });
             return;
         }
 
         res.status(200).json({
             success: true,
-            data: { orders, pagination },
+            data: { quotes, pagination },
         });
     } catch (error) {
         res.status(500).json({
@@ -473,17 +423,15 @@ async function getOrdersByUserID(req: Request, res: Response) {
     }
 }
 
-const OrderControllers = {
-    getOrders,
-    getDraftOrders,
-    getOrderByID,
-    newOrder,
-    updateOrder,
-    deliverOrder,
-    reviewOrder,
-    completeOrder,
-    getOrdersByStatus,
-    getOrdersByUserID,
+const QuoteControllers = {
+    newQuote,
+    getQuotes,
+    getQuoteByID,
+    updateQuote,
+    deliverQuote,
+    reviewQuote,
+    completeQuote,
+    getQuotesByStatus,
+    getQuotesByUserID,
 };
-
-export default OrderControllers;
+export default QuoteControllers;

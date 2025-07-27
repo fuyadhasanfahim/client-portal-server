@@ -13,7 +13,7 @@ router.put(
     upload.single("image"),
     UserControllers.uploadAvatar
 );
-router.get("/get-orders/:userID", UserControllers.getOrdersByUserID);
 router.get("/get-users", UserControllers.getUsers);
+router.get("/get-clients", UserControllers.getClients);
 
 export const userRoute = router;

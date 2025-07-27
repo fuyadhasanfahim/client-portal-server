@@ -20,6 +20,7 @@ app.post(
 const corsOptions = {
     origin: frontend_url!,
     credentials: true,
+    optionsSuccessStatus: 200,
 };
 
 app.use(express.json());

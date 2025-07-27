@@ -4,7 +4,6 @@ import upload from "../middleware/multer.js";
 
 const router = Router();
 
-router.post("/create-existing-user", UserControllers.createExistingUser);
 router.get("/me", UserControllers.getMe);
 router.get("/get-info/:userID", UserControllers.getUserInfo);
 router.put("/update-info/:userID", UserControllers.updateUserInfo);

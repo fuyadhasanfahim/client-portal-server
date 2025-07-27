@@ -1,50 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { nanoid } from "nanoid";
 import cloudinary from "../lib/cloudinary.js";
 import UserModel from "../models/user.model.js";
 import { ISanitizedUser, IUser } from "../types/user.interface.js";
 import getSanitizeUserData from "../utils/getSanitizeUserData.js";
 import bcrypt from "bcryptjs";
-
-async function createExistingUserInDB({
-    name,
-    username,
-    email,
-    phone,
-    company,
-    password,
-    provider,
-    isExistingUser,
-    services,
-    address,
-}: Partial<IUser>) {
-    const existingUser = await UserModel.findOne({ email });
-
-    if (existingUser) {
-        throw new Error("A user with this email already exists.");
-    }
-
-    const hashedPassword = await bcrypt.hash(password!, 12);
-
-    const user = new UserModel({
-        userID: `WBU${nanoid(10).toUpperCase()}`,
-        name,
-        username,
-        email,
-        phone,
-        company,
-        address,
-        provider,
-        password: hashedPassword,
-        isExistingUser: !!isExistingUser,
-        services,
-        isEmailVerified: false,
-    });
-
-    await user.save();
-
-    return user;
-}
 
 async function getMeFromDB(userID: string) {
     const user = (await UserModel.findOne({
@@ -261,7 +220,6 @@ async function getClientsFromDB({
 }
 
 const UserServices = {
-    createExistingUserInDB,
     getMeFromDB,
     getUserInfoFromDB,
     updateUserInfoInDB,

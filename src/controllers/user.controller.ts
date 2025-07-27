@@ -1,59 +1,6 @@
 import { Request, Response } from "express";
 import UserServices from "../services/user.service.js";
 
-async function createExistingUser(req: Request, res: Response) {
-    try {
-        const {
-            name,
-            username,
-            email,
-            phone,
-            company,
-            password,
-            provider,
-            isExistingUser,
-            services,
-            address,
-        } = req.body;
-
-        if (!name || !email || !username || !address || !password) {
-            res.status(400).json({
-                success: false,
-                message: "Some required fields are missing.",
-            });
-            return;
-        }
-
-        const user = await UserServices.createExistingUserInDB({
-            name,
-            username,
-            email,
-            phone,
-            company,
-            password,
-            provider,
-            isExistingUser,
-            services,
-            address,
-        });
-
-        res.status(201).json({
-            success: true,
-            message: "User created successfully!",
-            data: user,
-        });
-    } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: "An error occurred while processing your request",
-            error:
-                error instanceof Error
-                    ? error.message
-                    : "Something went wrong! Please try again later.",
-        });
-    }
-}
-
 async function getMe(req: Request, res: Response) {
     try {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -311,7 +258,6 @@ async function getClients(req: Request, res: Response) {
 }
 
 const UserControllers = {
-    createExistingUser,
     getMe,
     getUserInfo,
     updateUserInfo,

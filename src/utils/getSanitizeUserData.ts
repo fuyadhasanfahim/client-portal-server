@@ -18,6 +18,7 @@ export default async function getSanitizeUserData(
         updatedAt,
         createdAt,
         provider,
+        isExistingUser,
     } = user;
 
     return {
@@ -29,6 +30,7 @@ export default async function getSanitizeUserData(
         address,
         company,
         role,
+        isExistingUser,
         isEmailVerified,
         lastLogin,
         image,

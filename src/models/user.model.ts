@@ -10,7 +10,6 @@ const userSchema = new Schema<IUser & Document>(
         phone: { type: String, required: true },
         address: String,
         company: String,
-        stripeCustomerId: String,
 
         role: { type: String, enum: ["user", "admin"], default: "user" },
         provider: {
@@ -27,6 +26,20 @@ const userSchema = new Schema<IUser & Document>(
             },
         },
         oldPasswords: [String],
+
+        isExistingUser: { type: Boolean, default: false },
+        services: [
+            {
+                name: {
+                    type: String,
+                    required: true,
+                },
+                price: {
+                    type: Number,
+                    required: true,
+                },
+            },
+        ],
 
         isEmailVerified: { type: Boolean, default: false },
         emailVerificationToken: String,

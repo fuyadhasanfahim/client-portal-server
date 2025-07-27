@@ -9,7 +9,6 @@ export interface IUser {
     phone: string;
     address?: string;
     company?: string;
-    stripeCustomerId?: string;
 
     role: UserRole;
     provider: AuthProvider;
@@ -17,6 +16,13 @@ export interface IUser {
 
     password: string;
     oldPasswords?: string[];
+
+    isExistingUser: boolean;
+    services?: {
+        _id: string;
+        name: string;
+        price: number;
+    }[];
 
     isEmailVerified: boolean;
     emailVerificationToken?: string;
@@ -26,15 +32,15 @@ export interface IUser {
     isPasswordChanged?: boolean;
     lastPasswordChange?: Date;
 
-    lastLogin?: Date;
+    lastLogin: Date;
     image?: string;
 
     isActive: boolean;
     isDeleted: boolean;
     isBlocked: boolean;
 
-    createdAt?: Date;
-    updatedAt?: Date;
+    createdAt: Date;
+    updatedAt: Date;
 }
 
 export interface ISanitizedUser {
@@ -47,9 +53,11 @@ export interface ISanitizedUser {
     company?: string;
     role: UserRole;
     isEmailVerified: boolean;
-    lastLogin?: Date;
+    isExistingUser: boolean;
+    services?: string[];
+    lastLogin: Date;
     image?: string;
-    createdAt?: Date;
-    updatedAt?: Date;
-    provider?: AuthProvider;
+    provider: string;
+    createdAt: Date;
+    updatedAt: Date;
 }

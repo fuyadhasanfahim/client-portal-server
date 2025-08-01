@@ -7,6 +7,7 @@ import { paymentRoute } from "./payment.route.js";
 import { adminRoute } from "./admin.route.js";
 import { stripeRoute } from "./stripe.route.js";
 import { paypalRoute } from "./paypal.route.js";
+import { quoteRoute } from "./quote.route.js";
 
 const router = Router();
 
@@ -22,6 +23,10 @@ const moduleRoutes = [
     {
         path: "/orders",
         route: orderRoute,
+    },
+    {
+        path: "/quotes",
+        route: quoteRoute,
     },
     {
         path: "/invoice",

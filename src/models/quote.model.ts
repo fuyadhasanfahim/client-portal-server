@@ -121,10 +121,6 @@ const QuoteDetailsSchema = new Schema<IQuoteDetails>(
             type: String,
             required: false,
         },
-        sourceFileLink: {
-            type: String,
-            required: false,
-        },
         images: {
             type: Number,
             required: false,

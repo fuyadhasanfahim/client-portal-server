@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { nanoid } from "nanoid";
 import QuoteModel from "../models/quote.model";
 import UserModel from "../models/user.model";
@@ -70,6 +71,65 @@ async function newQuoteInDB({
     return quote;
 }
 
+async function getQuotesFromDB({
+    userID,
+    role,
+    search,
+    page = 1,
+    limit = 10,
+    sortBy = "createdAt",
+    sortQuote = "desc",
+    filter,
+}: {
+    userID: string;
+    role: string;
+    search?: string;
+    page?: number;
+    limit?: number;
+    sortBy?: string;
+    filter?: string;
+    sortQuote?: "asc" | "desc";
+}) {
+    const query: any = {};
+
+    if (role === "user") {
+        query["user.userID"] = userID;
+    }
+
+    if (search) {
+        query.$or = [
+            { queryID: { $regex: search, $options: "i" } },
+            { "user.name": { $regex: search, $options: "i" } },
+            { "user.email": { $regex: search, $options: "i" } },
+        ];
+    }
+
+    if (filter && filter !== "all") {
+        query.status = filter;
+    }
+
+    const sort: any = {
+        [sortBy]: sortQuote === "asc" ? 1 : -1,
+    };
+
+    const skip = (page - 1) * limit;
+
+    const [quotes, total] = await Promise.all([
+        QuoteModel.find(query).sort(sort).skip(skip).limit(limit).lean(),
+        QuoteModel.countDocuments(query),
+    ]);
+
+    return {
+        quotes,
+        pagination: {
+            total,
+            page,
+            limit,
+            totalPages: Math.ceil(total / limit),
+        },
+    };
+}
+
 async function getQuoteByIDFromDB(quoteID: string) {
     const quote = await QuoteModel.findOne({ quoteID });
 
@@ -80,5 +140,139 @@ async function getQuoteByIDFromDB(quoteID: string) {
     return quote;
 }
 
-const QuoteServices = { newQuoteInDB, getQuoteByIDFromDB };
+async function updateQuoteInDB({
+    quoteID,
+    data,
+}: {
+    quoteID: string;
+    data: Partial<IQuote>;
+}) {
+    const updatedQuote = await QuoteModel.findOneAndUpdate({ quoteID }, data, {
+        new: true,
+    });
+
+    if (!updatedQuote) throw new Error("Quote not found");
+
+    io.to(updatedQuote.user.userID).emit("quote-status-updated", {
+        quoteID: updatedQuote.quoteID,
+        status: updatedQuote.status,
+        updatedAt: updatedQuote.updatedAt,
+    });
+
+    io.to(updatedQuote.quoteID).emit("quote-status-updated", {
+        quoteID: updatedQuote.quoteID,
+        status: updatedQuote.status,
+        updatedAt: updatedQuote.updatedAt,
+    });
+
+    return updatedQuote;
+}
+
+async function deliverQuoteToClient({ quoteID }: { quoteID: string }) {
+    const quote = await QuoteModel.findOneAndUpdate(
+        { quoteID },
+        { status: "delivered" },
+        { new: true }
+    );
+
+    if (quote) {
+        io.to(quote.user.userID).emit("quote-status-updated", {
+            quoteID: quote.quoteID,
+            status: quote.status,
+            updatedAt: quote.updatedAt,
+        });
+
+        io.to(quote.quoteID).emit("quote-status-updated", {
+            quoteID: quote.quoteID,
+            status: quote.status,
+            updatedAt: quote.updatedAt,
+        });
+    }
+
+    return quote;
+}
+
+async function reviewQuoteToAdmin({ quoteID }: { quoteID: string }) {
+    const quote = await QuoteModel.findOneAndUpdate(
+        { quoteID },
+        { status: "in-revision" },
+        { new: true }
+    );
+
+    if (quote) {
+        io.to(quote.user.userID).emit("quote-status-updated", {
+            quoteID: quote.quoteID,
+            status: quote.status,
+            updatedAt: quote.updatedAt,
+        });
+
+        io.to(quote.quoteID).emit("quote-status-updated", {
+            quoteID: quote.quoteID,
+            status: quote.status,
+            updatedAt: quote.updatedAt,
+        });
+    }
+
+    return quote;
+}
+
+async function completeQuoteInDB({ quoteID }: { quoteID: string }) {
+    const quote = await QuoteModel.findOneAndUpdate(
+        { quoteID },
+        { status: "completed" },
+        { new: true }
+    );
+
+    if (quote) {
+        io.to(quote.user.userID).emit("quote-status-updated", {
+            quoteID: quote.quoteID,
+            status: quote.status,
+            updatedAt: quote.updatedAt,
+        });
+
+        io.to(quote.quoteID).emit("quote-status-updated", {
+            quoteID: quote.quoteID,
+            status: quote.status,
+            updatedAt: quote.updatedAt,
+        });
+    }
+
+    return quote;
+}
+
+async function getQuotesByStatusFromDB({
+    userID,
+    role,
+    status,
+}: {
+    userID: string;
+    role: string;
+    status: string;
+}) {
+    let quotes;
+
+    if (role === "user") {
+        quotes = await QuoteModel.find({
+            "user.userID": userID,
+            status,
+        });
+    } else {
+        quotes = await QuoteModel.find({
+            status,
+        });
+    }
+
+    return quotes;
+}
+
+const QuoteServices = {
+    newQuoteInDB,
+    getQuotesFromDB,
+    getQuoteByIDFromDB,
+    updateQuoteInDB,
+    deliverQuoteToClient,
+    reviewQuoteToAdmin,
+    completeQuoteInDB,
+    getQuotesByStatusFromDB,
+};
 export default QuoteServices;

@@ -18,7 +18,7 @@ app.post(
 );
 
 const corsOptions = {
-    origin: frontend_url! || "https://portal.webbriks.com",
+    origin: [frontend_url!],
     credentials: true,
     optionsSuccessStatus: 200,
 };

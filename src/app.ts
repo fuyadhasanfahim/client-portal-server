@@ -4,10 +4,10 @@ import bodyParser from "body-parser";
 import router from "./routes/index.js";
 import { verifyAuth } from "./middleware/verifyAuth.js";
 import cookieParser from "cookie-parser";
-import envConfig from "./config/env.config.js";
+// import envConfig from "./config/env.config.js";
 import StripeControllers from "./controllers/stripe.controller.js";
 
-const { frontend_url } = envConfig;
+// const { frontend_url } = envConfig;
 
 const app: Application = express();
 
@@ -18,13 +18,17 @@ app.post(
 );
 
 const corsOptions = {
-    origin: [frontend_url!],
+    origin: "https://portal.webbriks.com",
     credentials: true,
-    optionsSuccessStatus: 200,
+    methods: ["GET", "POST", "OPTIONS", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
 };
 
 app.use(cors(corsOptions));
 app.options("*", cors(corsOptions));
+
+app.options("*", cors(corsOptions));
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(cookieParser());
 app.use(bodyParser.json());

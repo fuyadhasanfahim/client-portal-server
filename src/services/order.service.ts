@@ -383,6 +383,69 @@ async function getOrdersByStatusFromDB({
     return orders;
 }
 
+async function getOrdersByUserIDFromDB({
+    userID,
+    search,
+    page = 1,
+    limit = 10,
+    filter,
+    sort,
+}: {
+    userID: string;
+    search?: string;
+    page?: number;
+    limit?: number;
+    filter?: string;
+    sort?: string;
+}) {
+    const user = await UserModel.findOne({ userID });
+
+    if (!user) throw new Error("User not found");
+
+    const query: any = {
+        "user.userID": userID,
+        orderStage: "payment-completed",
+    };
+
+    if (search) {
+        query.$or = [
+            { orderID: { $regex: search, $options: "i" } },
+            { "user.name": { $regex: search, $options: "i" } },
+            { "user.email": { $regex: search, $options: "i" } },
+        ];
+    }
+
+    if (filter && filter !== "all") {
+        query.status = filter;
+    }
+
+    const sortOptions: any = {
+        createdAt: -1,
+    };
+
+    if (sort) {
+        const [field, order] = sort.split(":");
+        sortOptions[field] = order === "asc" ? 1 : -1;
+    }
+
+    const skip = (page - 1) * limit;
+
+    const [orders, total] = await Promise.all([
+        OrderModel.find(query).sort(sortOptions).skip(skip).limit(limit).lean(),
+        OrderModel.countDocuments(query),
+    ]);
+
+    return {
+        orders,
+        pagination: {
+            total,
+            page,
+            limit,
+            totalPages: Math.ceil(total / limit),
+        },
+    };
+}
+
 const OrderServices = {
     newOrderInDB,
     getOrdersFromDB,
@@ -393,6 +456,7 @@ const OrderServices = {
     reviewOrderToAdmin,
     completeOrderInDB,
     getOrdersByStatusFromDB,
+    getOrdersByUserIDFromDB,
 };
 
 export default OrderServices;

@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import cloudinary from "../lib/cloudinary.js";
-import { OrderModel } from "../models/order.model.js";
 import UserModel from "../models/user.model.js";
 import { ISanitizedUser, IUser } from "../types/user.interface.js";
 import getSanitizeUserData from "../utils/getSanitizeUserData.js";
@@ -149,54 +148,6 @@ export async function uploadAvatarInDB(
     }
 }
 
-async function getOrdersByUserIDFromDB({
-    userID,
-    search,
-    page,
-    limit,
-    sortBy = "createdAt",
-    sortOrder = "desc",
-}: {
-    userID: string;
-    search?: string;
-    page: number;
-    limit: number;
-    sortBy?: string;
-    sortOrder?: "asc" | "desc";
-}) {
-    try {
-        const query: any = { userID };
-
-        if (search) {
-            query.$or = [{ orderID: { $regex: search, $options: "i" } }];
-        }
-
-        const sort: any = {
-            [sortBy]: sortOrder === "asc" ? 1 : -1,
-        };
-
-        const skip = (page - 1) * limit;
-
-        const [orders, total] = await Promise.all([
-            OrderModel.find(query).sort(sort).skip(skip).limit(limit),
-            OrderModel.countDocuments(query),
-        ]);
-
-        return {
-            orders,
-            total,
-            page,
-            totalPages: Math.ceil(total / limit),
-        };
-    } catch (error) {
-        throw new Error(
-            error instanceof Error
-                ? error.message
-                : "Something went wrong! Please try again later."
-        );
-    }
-}
-
 async function getUsersFromDB(role: string) {
     let users: IUser[];
     if (role === "admin") {
@@ -214,14 +165,68 @@ async function getUsersFromDB(role: string) {
     return sanitized;
 }
 
+async function getClientsFromDB({
+    userID,
+    search = "",
+    page = 1,
+    limit = 10,
+    sortBy = "createdAt",
+    sortOrder = "desc",
+}: {
+    userID: string;
+    search?: string;
+    page?: number;
+    limit?: number;
+    sortBy?: string;
+    sortOrder?: "asc" | "desc";
+}) {
+    const user = await UserModel.findOne({ userID });
+
+    if (!user) {
+        throw new Error("User not found.");
+    }
+
+    const query: any = {};
+
+    if (search) {
+        query.$or = [
+            { name: { $regex: search, $options: "i" } },
+            { email: { $regex: search, $options: "i" } },
+            { userID: { $regex: search, $options: "i" } },
+        ];
+    }
+
+    const sort: any = {
+        [sortBy]: sortOrder === "asc" ? 1 : -1,
+    };
+
+    const skip = (page - 1) * limit;
+
+    const [clients, total] = await Promise.all([
+        UserModel.find(query).sort(sort).skip(skip).limit(limit),
+        UserModel.countDocuments(query),
+    ]);
+
+    const sanitizedClients = await Promise.all(
+        clients.map((client) => getSanitizeUserData(client))
+    );
+
+    return {
+        clients: sanitizedClients,
+        total,
+        page,
+        totalPages: Math.ceil(total / limit),
+    };
+}
+
 const UserServices = {
     getMeFromDB,
     getUserInfoFromDB,
     updateUserInfoInDB,
     updateUserPasswordInDB,
     uploadAvatarInDB,
-    getOrdersByUserIDFromDB,
     getUsersFromDB,
+    getClientsFromDB,
 };
 
 export default UserServices;

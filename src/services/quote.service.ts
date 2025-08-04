@@ -265,6 +265,69 @@ async function getQuotesByStatusFromDB({
     return quotes;
 }
 
+async function getQuotesByUserIDFromDB({
+    userID,
+    search,
+    page = 1,
+    limit = 10,
+    filter,
+    sort,
+}: {
+    userID: string;
+    search?: string;
+    page?: number;
+    limit?: number;
+    filter?: string;
+    sort?: string;
+}) {
+    const user = await UserModel.findOne({ userID });
+
+    if (!user) throw new Error("User not found");
+
+    const query: any = {
+        "user.userID": userID,
+        quoteStage: "payment-completed",
+    };
+
+    if (search) {
+        query.$or = [
+            { quoteID: { $regex: search, $options: "i" } },
+            { "user.name": { $regex: search, $options: "i" } },
+            { "user.email": { $regex: search, $options: "i" } },
+        ];
+    }
+
+    if (filter && filter !== "all") {
+        query.status = filter;
+    }
+
+    const sortOptions: any = {
+        createdAt: -1,
+    };
+
+    if (sort) {
+        const [field, quote] = sort.split(":");
+        sortOptions[field] = quote === "asc" ? 1 : -1;
+    }
+
+    const skip = (page - 1) * limit;
+
+    const [quotes, total] = await Promise.all([
+        QuoteModel.find(query).sort(sortOptions).skip(skip).limit(limit).lean(),
+        QuoteModel.countDocuments(query),
+    ]);
+
+    return {
+        quotes,
+        pagination: {
+            total,
+            page,
+            limit,
+            totalPages: Math.ceil(total / limit),
+        },
+    };
+}
+
 const QuoteServices = {
     newQuoteInDB,
     getQuotesFromDB,
@@ -274,5 +337,6 @@ const QuoteServices = {
     reviewQuoteToAdmin,
     completeQuoteInDB,
     getQuotesByStatusFromDB,
+    getQuotesByUserIDFromDB,
 };
 export default QuoteServices;

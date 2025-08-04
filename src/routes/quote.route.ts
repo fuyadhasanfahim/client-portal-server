@@ -11,5 +11,6 @@ router.put("/deliver-quote", QuoteControllers.deliverQuote);
 router.put("/review-quote", QuoteControllers.reviewQuote);
 router.put("/complete-quote", QuoteControllers.completeQuote);
 router.get("/get-quotes-by-status/:status", QuoteControllers.getQuotesByStatus);
+router.get("/get-quotes-by-user", QuoteControllers.getQuotesByUserID);
 
 export const quoteRoute = router;

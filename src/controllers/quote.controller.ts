@@ -370,6 +370,59 @@ async function getQuotesByStatus(req: Request, res: Response) {
     }
 }
 
+async function getQuotesByUserID(req: Request, res: Response) {
+    try {
+        const {
+            userID,
+            search = "",
+            page = 1,
+            limit = 10,
+            filter,
+            sort,
+        } = req.query;
+
+        if (!userID) {
+            res.status(400).json({
+                success: false,
+                message: "User ID is required.",
+            });
+            return;
+        }
+
+        const { quotes, pagination } =
+            await QuoteServices.getQuotesByUserIDFromDB({
+                userID: userID as string,
+                search: search as string,
+                page: parseFloat(page as string),
+                limit: parseFloat(limit as string),
+                filter: filter as string,
+                sort: sort as string,
+            });
+
+        if (!quotes || quotes.length === 0) {
+            res.status(404).json({
+                success: false,
+                message: "No quotes found for this user.",
+            });
+            return;
+        }
+
+        res.status(200).json({
+            success: true,
+            data: { quotes, pagination },
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "An error occurred while processing your request",
+            error:
+                error instanceof Error
+                    ? error.message
+                    : "Internal server error",
+        });
+    }
+}
+
 const QuoteControllers = {
     newQuote,
     getQuotes,
@@ -379,5 +432,6 @@ const QuoteControllers = {
     reviewQuote,
     completeQuote,
     getQuotesByStatus,
+    getQuotesByUserID,
 };
 export default QuoteControllers;

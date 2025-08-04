@@ -1,13 +1,13 @@
 import { Request, Response } from "express";
-import QuoteServices from "../services/quote.service";
-import envConfig from "../config/env.config";
-import { deliveryEmail } from "../html-templates/deliveryEmail";
-import { sendEmail } from "../lib/nodemailer";
+import QuoteServices from "../services/quote.service.js";
+import envConfig from "../config/env.config.js";
+import { deliveryEmail } from "../html-templates/deliveryEmail.js";
+import { sendEmail } from "../lib/nodemailer.js";
 import {
     getAdminRevisionEmail,
     getCustomerRevisionEmail,
-} from "../html-templates/getRevisionRequestEmail";
-import { getQuoteCompletionEmail } from "../html-templates/getQuoteCompletionEmail";
+} from "../html-templates/getRevisionRequestEmail.js";
+import { getQuoteCompletionEmail } from "../html-templates/getQuoteCompletionEmail.js";
 
 async function newQuote(req: Request, res: Response) {
     try {

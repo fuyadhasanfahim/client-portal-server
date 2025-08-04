@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { nanoid } from "nanoid";
-import QuoteModel from "../models/quote.model";
-import UserModel from "../models/user.model";
-import { IQuote } from "../types/quote.interface";
-import { io } from "../server";
+import QuoteModel from "../models/quote.model.js";
+import UserModel from "../models/user.model.js";
+import { IQuote } from "../types/quote.interface.js";
+import { io } from "../server.js";
 
 async function newQuoteInDB({
     quoteStage,

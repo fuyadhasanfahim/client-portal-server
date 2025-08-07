@@ -4,7 +4,7 @@ export interface IQuoteUser {
     userID: string;
     name: string;
     email: string;
-    image: string;
+    image?: string;
     company?: string;
     address?: string;
 }

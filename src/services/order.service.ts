@@ -9,6 +9,8 @@ import {
 } from "../types/order.interface.js";
 import { IPayment } from "../types/payment.interface.js";
 import { io } from "../server.js";
+import { emitOrderToRooms } from "../utils/socket/emitOrderEvents.js";
+import { socketEvents } from "../utils/socket/socketEvents.js";
 
 async function newOrderInDB({
     orderStage,
@@ -95,19 +97,7 @@ async function newOrderInDB({
         }
 
         if (order) {
-            io.to(order.user.userID.toString()).emit("new-order", {
-                orderID: order.orderID,
-                status: order.status,
-                orderStage: order.orderStage,
-                createdAt: order.createdAt,
-            });
-
-            io.to(order.orderID).emit("new-order", {
-                orderID: order.orderID,
-                status: order.status,
-                orderStage: order.orderStage,
-                createdAt: order.createdAt,
-            });
+            emitOrderToRooms(io, order, socketEvents.entity.created("order"));
         }
 
         return order;
@@ -271,17 +261,11 @@ async function updateOrderInDB({
 
     if (!updatedOrder) throw new Error("Order not found");
 
-    io.to(updatedOrder.user.userID).emit("order-status-updated", {
-        orderID: updatedOrder.orderID,
-        status: updatedOrder.status,
-        updatedAt: updatedOrder.updatedAt,
-    });
-
-    io.to(updatedOrder.orderID).emit("order-status-updated", {
-        orderID: updatedOrder.orderID,
-        status: updatedOrder.status,
-        updatedAt: updatedOrder.updatedAt,
-    });
+    emitOrderToRooms(
+        io,
+        updatedOrder,
+        socketEvents.entity.statusUpdated("order")
+    );
 
     return updatedOrder;
 }
@@ -294,17 +278,7 @@ async function deliverOrderToClient({ orderID }: { orderID: string }) {
     );
 
     if (order) {
-        io.to(order.user.userID).emit("order-status-updated", {
-            orderID: order.orderID,
-            status: order.status,
-            updatedAt: order.updatedAt,
-        });
-
-        io.to(order.orderID).emit("order-status-updated", {
-            orderID: order.orderID,
-            status: order.status,
-            updatedAt: order.updatedAt,
-        });
+        emitOrderToRooms(io, order, socketEvents.entity.delivered("order"));
     }
 
     return order;
@@ -318,17 +292,7 @@ async function reviewOrderToAdmin({ orderID }: { orderID: string }) {
     );
 
     if (order) {
-        io.to(order.user.userID).emit("order-status-updated", {
-            orderID: order.orderID,
-            status: order.status,
-            updatedAt: order.updatedAt,
-        });
-
-        io.to(order.orderID).emit("order-status-updated", {
-            orderID: order.orderID,
-            status: order.status,
-            updatedAt: order.updatedAt,
-        });
+        emitOrderToRooms(io, order, socketEvents.entity.updated("order"));
     }
 
     return order;
@@ -342,17 +306,7 @@ async function completeOrderInDB({ orderID }: { orderID: string }) {
     );
 
     if (order) {
-        io.to(order.user.userID).emit("order-status-updated", {
-            orderID: order.orderID,
-            status: order.status,
-            updatedAt: order.updatedAt,
-        });
-
-        io.to(order.orderID).emit("order-status-updated", {
-            orderID: order.orderID,
-            status: order.status,
-            updatedAt: order.updatedAt,
-        });
+        emitOrderToRooms(io, order, socketEvents.entity.updated("order"));
     }
 
     return order;

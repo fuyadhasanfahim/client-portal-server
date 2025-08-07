@@ -23,8 +23,7 @@ const QuoteUserSchema = new Schema<IQuoteUser>(
             required: true,
         },
         image: {
-            type: String,
-            required: true,
+            type: String
         },
         company: {
             type: String,

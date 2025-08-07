@@ -8,6 +8,7 @@ import { adminRoute } from "./admin.route.js";
 import { stripeRoute } from "./stripe.route.js";
 import { paypalRoute } from "./paypal.route.js";
 import { quoteRoute } from "./quote.route.js";
+import { notificationRoute } from "./notification.route.js";
 
 const router = Router();
 
@@ -47,6 +48,10 @@ const moduleRoutes = [
     {
         path: "/paypal",
         route: paypalRoute,
+    },
+    {
+        path: "/notifications",
+        route: notificationRoute,
     },
 ];
 

@@ -8,6 +8,7 @@ import {
     getCustomerRevisionEmail,
 } from "../html-templates/getRevisionRequestEmail.js";
 import { getQuoteCompletionEmail } from "../html-templates/getQuoteCompletionEmail.js";
+import { sendNotification } from "../utils/sendNotification.js";
 
 async function newQuote(req: Request, res: Response) {
     try {
@@ -29,6 +30,15 @@ async function newQuote(req: Request, res: Response) {
             quoteID,
             details,
         });
+
+        if (quote?.quoteStage === "details-provided") {
+            await sendNotification({
+                isAdmin: true,
+                title: `📝 New quote #${quote.quoteID} Created`,
+                message: `Your new quote has been placed and is being processed.`,
+                link: `${envConfig.frontend_url}/quotes/details/${quote.quoteID}`,
+            });
+        }
 
         res.status(201).json({
             success: true,
@@ -158,6 +168,22 @@ async function updateQuote(req: Request, res: Response) {
             return;
         }
 
+        if (data === "in-progress") {
+            await sendNotification({
+                userID: updatedQuote.user.userID,
+                title: `🎁 Quote #${quoteID} Accepted`,
+                message: `Hi ${updatedQuote.user.name}, your quote has been Accepted. Click to view the details.`,
+                link: `${envConfig.frontend_url}/quotes/details/${quoteID}`,
+            });
+        }
+
+        await sendNotification({
+            userID: updatedQuote.user.userID,
+            title: `Quote #${quoteID} Canceled`,
+            message: `Hi ${updatedQuote.user.name}, your quote has been Canceled. Click to view the details.`,
+            link: `${envConfig.frontend_url}/quotes/details/${quoteID}`,
+        });
+
         res.status(200).json({
             success: true,
         });
@@ -201,6 +227,13 @@ async function deliverQuote(req: Request, res: Response) {
             from: envConfig.email_user!,
             subject: `Your Quote #${quoteID} Has Been Delivered!`,
             html: deliveryEmail(quoteID, downloadLink),
+        });
+
+        await sendNotification({
+            userID: quote.user.userID,
+            title: `🎁 Quote #${quoteID} Delivered`,
+            message: `Hi ${quote.user.name}, your quote has been successfully delivered. Click to view the details.`,
+            link: `${envConfig.frontend_url}/quotes/details/${quoteID}`,
         });
 
         res.status(200).json({
@@ -262,6 +295,13 @@ async function reviewQuote(req: Request, res: Response) {
             ),
         });
 
+        await sendNotification({
+            isAdmin: true,
+            title: `🔁 Revision Requested on Quote #${quoteID}`,
+            message: `A customer has submitted a revision request for quote #${quoteID}.`,
+            link: `${envConfig.frontend_url}/quotes/details/${quoteID}`,
+        });
+
         res.status(200).json({
             success: true,
             message: "Revision request submitted successfully.",
@@ -305,6 +345,13 @@ async function completeQuote(req: Request, res: Response) {
             from: envConfig.email_user!,
             subject: `Quote #${quoteID} Completed!`,
             html: getQuoteCompletionEmail(quoteID, quote.user.name),
+        });
+
+        await sendNotification({
+            isAdmin: true,
+            title: `✅ Quote #${quoteID} Marked Completed`,
+            message: `The quote has been marked as completed. Review or archive if needed.`,
+            link: `${envConfig.frontend_url}/quotes/details/${quoteID}`,
         });
 
         res.status(200).json({

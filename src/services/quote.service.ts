@@ -4,6 +4,8 @@ import QuoteModel from "../models/quote.model.js";
 import UserModel from "../models/user.model.js";
 import { IQuote } from "../types/quote.interface.js";
 import { io } from "../server.js";
+import { socketEvents } from "../utils/socket/socketEvents.js";
+import { emitOrderToRooms } from "../utils/socket/emitOrderEvents.js";
 
 async function newQuoteInDB({
     quoteStage,
@@ -53,19 +55,7 @@ async function newQuoteInDB({
     }
 
     if (quote) {
-        io.to(quote.user.userID.toString()).emit("new-quote", {
-            quoteID: quote.quoteID,
-            status: quote.status,
-            quoteStage: quote.quoteStage,
-            createdAt: quote.createdAt,
-        });
-
-        io.to(quote.quoteID).emit("new-quote", {
-            quoteID: quote.quoteID,
-            status: quote.status,
-            quoteStage: quote.quoteStage,
-            createdAt: quote.createdAt,
-        });
+        emitOrderToRooms(io, quote, socketEvents.entity.created("quote"));
     }
 
     return quote;
@@ -153,17 +143,11 @@ async function updateQuoteInDB({
 
     if (!updatedQuote) throw new Error("Quote not found");
 
-    io.to(updatedQuote.user.userID).emit("quote-status-updated", {
-        quoteID: updatedQuote.quoteID,
-        status: updatedQuote.status,
-        updatedAt: updatedQuote.updatedAt,
-    });
-
-    io.to(updatedQuote.quoteID).emit("quote-status-updated", {
-        quoteID: updatedQuote.quoteID,
-        status: updatedQuote.status,
-        updatedAt: updatedQuote.updatedAt,
-    });
+    emitOrderToRooms(
+        io,
+        updatedQuote,
+        socketEvents.entity.statusUpdated("quote")
+    );
 
     return updatedQuote;
 }
@@ -176,17 +160,7 @@ async function deliverQuoteToClient({ quoteID }: { quoteID: string }) {
     );
 
     if (quote) {
-        io.to(quote.user.userID).emit("quote-status-updated", {
-            quoteID: quote.quoteID,
-            status: quote.status,
-            updatedAt: quote.updatedAt,
-        });
-
-        io.to(quote.quoteID).emit("quote-status-updated", {
-            quoteID: quote.quoteID,
-            status: quote.status,
-            updatedAt: quote.updatedAt,
-        });
+        emitOrderToRooms(io, quote, socketEvents.entity.delivered("quote"));
     }
 
     return quote;
@@ -200,17 +174,7 @@ async function reviewQuoteToAdmin({ quoteID }: { quoteID: string }) {
     );
 
     if (quote) {
-        io.to(quote.user.userID).emit("quote-status-updated", {
-            quoteID: quote.quoteID,
-            status: quote.status,
-            updatedAt: quote.updatedAt,
-        });
-
-        io.to(quote.quoteID).emit("quote-status-updated", {
-            quoteID: quote.quoteID,
-            status: quote.status,
-            updatedAt: quote.updatedAt,
-        });
+        emitOrderToRooms(io, quote, socketEvents.entity.updated("quote"));
     }
 
     return quote;
@@ -224,17 +188,7 @@ async function completeQuoteInDB({ quoteID }: { quoteID: string }) {
     );
 
     if (quote) {
-        io.to(quote.user.userID).emit("quote-status-updated", {
-            quoteID: quote.quoteID,
-            status: quote.status,
-            updatedAt: quote.updatedAt,
-        });
-
-        io.to(quote.quoteID).emit("quote-status-updated", {
-            quoteID: quote.quoteID,
-            status: quote.status,
-            updatedAt: quote.updatedAt,
-        });
+        emitOrderToRooms(io, quote, socketEvents.entity.updated("quote"));
     }
 
     return quote;

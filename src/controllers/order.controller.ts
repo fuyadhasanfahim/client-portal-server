@@ -8,6 +8,7 @@ import {
     getCustomerRevisionEmail,
 } from "../html-templates/getRevisionRequestEmail.js";
 import { getOrderCompletionEmail } from "../html-templates/getOrderCompletionEmail.js";
+import { sendNotification } from "../utils/sendNotification.js";
 
 async function newOrder(req: Request, res: Response) {
     try {
@@ -31,6 +32,15 @@ async function newOrder(req: Request, res: Response) {
             total,
             payment,
         });
+
+        if (order?.orderStage === "payment-completed") {
+            await sendNotification({
+                isAdmin: true,
+                title: `📝 New Order #${orderID} Created`,
+                message: `Your new order has been placed and is being processed.`,
+                link: `${envConfig.frontend_url}/orders/details/${orderID}`,
+            });
+        }
 
         res.status(201).json({
             success: true,
@@ -208,6 +218,22 @@ async function updateOrder(req: Request, res: Response) {
             return;
         }
 
+        if (data === "in-progress") {
+            await sendNotification({
+                userID: updatedOrder.user.userID,
+                title: `🎁 Order #${orderID} Accepted`,
+                message: `Hi ${updatedOrder.user.name}, your order has been Accepted. Click to view the details.`,
+                link: `${envConfig.frontend_url}/orders/details/${orderID}`,
+            });
+        }
+
+        await sendNotification({
+            userID: updatedOrder.user.userID,
+            title: `Order #${orderID} Canceled`,
+            message: `Hi ${updatedOrder.user.name}, your order has been Canceled. Click to view the details.`,
+            link: `${envConfig.frontend_url}/orders/details/${orderID}`,
+        });
+
         res.status(200).json({
             success: true,
         });
@@ -251,6 +277,13 @@ async function deliverOrder(req: Request, res: Response) {
             from: envConfig.email_user!,
             subject: `Your Order #${orderID} Has Been Delivered!`,
             html: deliveryEmail(orderID, downloadLink),
+        });
+
+        await sendNotification({
+            userID: order.user.userID,
+            title: `🎁 Order #${orderID} Delivered`,
+            message: `Hi ${order.user.name}, your order has been successfully delivered. Click to view the details.`,
+            link: `${envConfig.frontend_url}/orders/details/${orderID}`,
         });
 
         res.status(200).json({
@@ -312,6 +345,13 @@ async function reviewOrder(req: Request, res: Response) {
             ),
         });
 
+        await sendNotification({
+            isAdmin: true,
+            title: `🔁 Revision Requested on Order #${orderID}`,
+            message: `A customer has submitted a revision request for order #${orderID}.`,
+            link: `${envConfig.frontend_url}/orders/details/${orderID}`,
+        });
+
         res.status(200).json({
             success: true,
             message: "Revision request submitted successfully.",
@@ -355,6 +395,13 @@ async function completeOrder(req: Request, res: Response) {
             from: envConfig.email_user!,
             subject: `Order #${orderID} Completed!`,
             html: getOrderCompletionEmail(orderID, order.user.name),
+        });
+
+        await sendNotification({
+            isAdmin: true,
+            title: `✅ Order #${orderID} Marked Completed`,
+            message: `The order has been marked as completed. Review or archive if needed.`,
+            link: `${envConfig.frontend_url}/orders/details/${orderID}`,
         });
 
         res.status(200).json({

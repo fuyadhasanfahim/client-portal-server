@@ -19,6 +19,16 @@ export default function registerSocketHandlers(io: Server) {
             console.log(`📦 Socket ${socket.id} left order room: ${orderID}`);
         });
 
+        socket.on("join-quote-room", (quoteID: string) => {
+            socket.join(quoteID);
+            console.log(`📦 Socket ${socket.id} joined quote room: ${quoteID}`);
+        });
+
+        socket.on("leave-quote-room", (quoteID: string) => {
+            socket.leave(quoteID);
+            console.log(`📦 Socket ${socket.id} left quote room: ${quoteID}`);
+        });
+
         socket.on("disconnect", () => {
             console.log("🔴 Socket disconnected:", socket.id);
         });

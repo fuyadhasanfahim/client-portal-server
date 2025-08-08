@@ -9,6 +9,7 @@ import {
 } from "../html-templates/getRevisionRequestEmail.js";
 import { getQuoteCompletionEmail } from "../html-templates/getQuoteCompletionEmail.js";
 import { sendNotification } from "../utils/sendNotification.js";
+import { io } from "../server.js";
 
 async function newQuote(req: Request, res: Response) {
     try {
@@ -39,6 +40,8 @@ async function newQuote(req: Request, res: Response) {
                 link: `${envConfig.frontend_url}/quotes/details/${quote.quoteID}`,
             });
         }
+
+        io.to(quoteID).emit("quote-updated");
 
         res.status(201).json({
             success: true,
@@ -184,6 +187,8 @@ async function updateQuote(req: Request, res: Response) {
             link: `${envConfig.frontend_url}/quotes/details/${quoteID}`,
         });
 
+        io.to(quoteID).emit("quote-updated");
+
         res.status(200).json({
             success: true,
         });
@@ -235,6 +240,8 @@ async function deliverQuote(req: Request, res: Response) {
             message: `Hi ${quote.user.name}, your quote has been successfully delivered. Click to view the details.`,
             link: `${envConfig.frontend_url}/quotes/details/${quoteID}`,
         });
+
+        io.to(quoteID).emit("quote-updated");
 
         res.status(200).json({
             success: true,
@@ -302,6 +309,8 @@ async function reviewQuote(req: Request, res: Response) {
             link: `${envConfig.frontend_url}/quotes/details/${quoteID}`,
         });
 
+        io.to(quoteID).emit("quote-updated");
+
         res.status(200).json({
             success: true,
             message: "Revision request submitted successfully.",
@@ -353,6 +362,8 @@ async function completeQuote(req: Request, res: Response) {
             message: `The quote has been marked as completed. Review or archive if needed.`,
             link: `${envConfig.frontend_url}/quotes/details/${quoteID}`,
         });
+
+        io.to(quoteID).emit("quote-updated");
 
         res.status(200).json({
             success: true,

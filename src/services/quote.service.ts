@@ -3,9 +3,6 @@ import { nanoid } from "nanoid";
 import QuoteModel from "../models/quote.model.js";
 import UserModel from "../models/user.model.js";
 import { IQuote } from "../types/quote.interface.js";
-import { io } from "../server.js";
-import { socketEvents } from "../utils/socket/socketEvents.js";
-import { emitOrderToRooms } from "../utils/socket/emitOrderEvents.js";
 
 async function newQuoteInDB({
     quoteStage,
@@ -52,10 +49,6 @@ async function newQuoteInDB({
             },
             { new: true }
         );
-    }
-
-    if (quote) {
-        emitOrderToRooms(io, quote, socketEvents.entity.created("quote"));
     }
 
     return quote;
@@ -143,12 +136,6 @@ async function updateQuoteInDB({
 
     if (!updatedQuote) throw new Error("Quote not found");
 
-    emitOrderToRooms(
-        io,
-        updatedQuote,
-        socketEvents.entity.statusUpdated("quote")
-    );
-
     return updatedQuote;
 }
 
@@ -158,10 +145,6 @@ async function deliverQuoteToClient({ quoteID }: { quoteID: string }) {
         { status: "delivered" },
         { new: true }
     );
-
-    if (quote) {
-        emitOrderToRooms(io, quote, socketEvents.entity.delivered("quote"));
-    }
 
     return quote;
 }
@@ -173,10 +156,6 @@ async function reviewQuoteToAdmin({ quoteID }: { quoteID: string }) {
         { new: true }
     );
 
-    if (quote) {
-        emitOrderToRooms(io, quote, socketEvents.entity.updated("quote"));
-    }
-
     return quote;
 }
 
@@ -186,10 +165,6 @@ async function completeQuoteInDB({ quoteID }: { quoteID: string }) {
         { status: "completed" },
         { new: true }
     );
-
-    if (quote) {
-        emitOrderToRooms(io, quote, socketEvents.entity.updated("quote"));
-    }
 
     return quote;
 }

@@ -9,6 +9,7 @@ import {
 } from "../html-templates/getRevisionRequestEmail.js";
 import { getOrderCompletionEmail } from "../html-templates/getOrderCompletionEmail.js";
 import { sendNotification } from "../utils/sendNotification.js";
+import { io } from "../server.js";
 
 async function newOrder(req: Request, res: Response) {
     try {
@@ -41,6 +42,8 @@ async function newOrder(req: Request, res: Response) {
                 link: `${envConfig.frontend_url}/orders/details/${orderID}`,
             });
         }
+
+        io.to(orderID).emit("order-updated");
 
         res.status(201).json({
             success: true,
@@ -286,6 +289,8 @@ async function deliverOrder(req: Request, res: Response) {
             link: `${envConfig.frontend_url}/orders/details/${orderID}`,
         });
 
+        io.to(orderID).emit("order-updated");
+
         res.status(200).json({
             success: true,
             message: "Order delivered successfully and customer notified.",
@@ -352,6 +357,8 @@ async function reviewOrder(req: Request, res: Response) {
             link: `${envConfig.frontend_url}/orders/details/${orderID}`,
         });
 
+        io.to(orderID).emit("order-updated");
+
         res.status(200).json({
             success: true,
             message: "Revision request submitted successfully.",
@@ -403,6 +410,8 @@ async function completeOrder(req: Request, res: Response) {
             message: `The order has been marked as completed. Review or archive if needed.`,
             link: `${envConfig.frontend_url}/orders/details/${orderID}`,
         });
+
+        io.to(orderID).emit("order-updated");
 
         res.status(200).json({
             success: true,

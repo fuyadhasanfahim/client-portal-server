@@ -8,9 +8,6 @@ import {
     IOrderServiceSelection,
 } from "../types/order.interface.js";
 import { IPayment } from "../types/payment.interface.js";
-import { io } from "../server.js";
-import { emitOrderToRooms } from "../utils/socket/emitOrderEvents.js";
-import { socketEvents } from "../utils/socket/socketEvents.js";
 
 async function newOrderInDB({
     orderStage,
@@ -94,10 +91,6 @@ async function newOrderInDB({
                 },
                 { new: true }
             );
-        }
-
-        if (order) {
-            emitOrderToRooms(io, order, socketEvents.entity.created("order"));
         }
 
         return order;
@@ -261,12 +254,6 @@ async function updateOrderInDB({
 
     if (!updatedOrder) throw new Error("Order not found");
 
-    emitOrderToRooms(
-        io,
-        updatedOrder,
-        socketEvents.entity.statusUpdated("order")
-    );
-
     return updatedOrder;
 }
 
@@ -276,10 +263,6 @@ async function deliverOrderToClient({ orderID }: { orderID: string }) {
         { status: "delivered" },
         { new: true }
     );
-
-    if (order) {
-        emitOrderToRooms(io, order, socketEvents.entity.delivered("order"));
-    }
 
     return order;
 }
@@ -291,10 +274,6 @@ async function reviewOrderToAdmin({ orderID }: { orderID: string }) {
         { new: true }
     );
 
-    if (order) {
-        emitOrderToRooms(io, order, socketEvents.entity.updated("order"));
-    }
-
     return order;
 }
 
@@ -304,10 +283,6 @@ async function completeOrderInDB({ orderID }: { orderID: string }) {
         { status: "completed" },
         { new: true }
     );
-
-    if (order) {
-        emitOrderToRooms(io, order, socketEvents.entity.updated("order"));
-    }
 
     return order;
 }

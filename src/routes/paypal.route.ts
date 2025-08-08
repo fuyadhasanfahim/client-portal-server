@@ -193,7 +193,6 @@ router.post("/create-order", async (req, res) => {
             links: response.data.links,
         });
     } catch (error: any) {
-        console.log("Failed to create PayPal order:", error.message);
         res.status(500).json({
             error: "Failed to create PayPal order",
             details: error.response?.data || error.message,

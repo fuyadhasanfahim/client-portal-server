@@ -34,17 +34,6 @@ async function newOrder(req: Request, res: Response) {
             payment,
         });
 
-        if (order?.orderStage === "payment-completed") {
-            await sendNotification({
-                isAdmin: true,
-                title: `📝 New Order #${orderID} Created`,
-                message: `Your new order has been placed and is being processed.`,
-                link: `${envConfig.frontend_url}/orders/details/${orderID}`,
-            });
-        }
-
-        io.to(orderID).emit("order-updated");
-
         res.status(201).json({
             success: true,
             orderID: order?.orderID as string,
@@ -221,21 +210,23 @@ async function updateOrder(req: Request, res: Response) {
             return;
         }
 
-        if (data === "in-progress") {
+        if (updatedOrder.status === "in-progress") {
             await sendNotification({
                 userID: updatedOrder.user.userID,
                 title: `🎁 Order #${orderID} Accepted`,
                 message: `Hi ${updatedOrder.user.name}, your order has been Accepted. Click to view the details.`,
                 link: `${envConfig.frontend_url}/orders/details/${orderID}`,
             });
+        } else {
+            await sendNotification({
+                userID: updatedOrder.user.userID,
+                title: `Order #${orderID} Canceled`,
+                message: `Hi ${updatedOrder.user.name}, your order has been Canceled. Click to view the details.`,
+                link: `${envConfig.frontend_url}/orders/details/${orderID}`,
+            });
         }
 
-        await sendNotification({
-            userID: updatedOrder.user.userID,
-            title: `Order #${orderID} Canceled`,
-            message: `Hi ${updatedOrder.user.name}, your order has been Canceled. Click to view the details.`,
-            link: `${envConfig.frontend_url}/orders/details/${orderID}`,
-        });
+        io.to(orderID).emit("order-updated");
 
         res.status(200).json({
             success: true,

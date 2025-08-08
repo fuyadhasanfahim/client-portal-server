@@ -50,7 +50,7 @@ async function newPaymentInDB({
     order.orderStage = "payment-completed";
     await order.save();
 
-    return payment;
+    return { payment, order };
 }
 
 export async function getPaymentsByStatusFromDB({

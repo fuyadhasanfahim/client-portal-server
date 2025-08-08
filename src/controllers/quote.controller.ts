@@ -39,9 +39,9 @@ async function newQuote(req: Request, res: Response) {
                 message: `Your new quote has been placed and is being processed.`,
                 link: `${envConfig.frontend_url}/quotes/details/${quote.quoteID}`,
             });
-        }
 
-        io.to(quoteID).emit("quote-updated");
+            io.to("admin-room").emit("new-quote");
+        }
 
         res.status(201).json({
             success: true,

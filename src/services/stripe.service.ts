@@ -103,8 +103,6 @@ async function paymentWebhookInDB(session: Stripe.Checkout.Session) {
         }
     );
 
-    console.log(session.payment_intent?.toString());
-
     const user = await UserModel.findOne({ userID });
 
     if (user?.email) {

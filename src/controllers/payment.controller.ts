@@ -1,6 +1,9 @@
 import { Request, Response } from "express";
 import PaymentServices from "../services/payment.service.js";
 import { IPayment } from "../types/payment.interface.js";
+import { sendNotification } from "../utils/sendNotification.js";
+import envConfig from "../config/env.config.js";
+import { io } from "../server.js";
 
 async function newPayment(req: Request, res: Response) {
     try {
@@ -13,9 +16,8 @@ async function newPayment(req: Request, res: Response) {
             customerID,
             status,
             amount,
-            currency
+            currency,
         } = req.body;
-        console.log(amount);
 
         if (!userID || !orderID || !paymentOption || !status) {
             res.status(400).json({
@@ -25,7 +27,7 @@ async function newPayment(req: Request, res: Response) {
             return;
         }
 
-        await PaymentServices.newPaymentInDB({
+        const data = await PaymentServices.newPaymentInDB({
             userID,
             orderID,
             paymentOption,
@@ -34,8 +36,19 @@ async function newPayment(req: Request, res: Response) {
             customerID,
             status,
             amount,
-            currency
+            currency,
         });
+
+        if (data.order.orderStage === "payment-completed") {
+            await sendNotification({
+                isAdmin: true,
+                title: `📝 New Order #${data.order.orderID} Created`,
+                message: `Your new order has been placed and is being processed.`,
+                link: `${envConfig.frontend_url}/orders/details/${data.order.orderID}`,
+            });
+
+            io.to("admin-room").emit("new-order");
+        }
 
         res.status(200).json({
             success: true,

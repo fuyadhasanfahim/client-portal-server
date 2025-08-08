@@ -9,6 +9,11 @@ export default function registerSocketHandlers(io: Server) {
             console.log(`👤 Socket ${socket.id} joined user room: ${userID}`);
         });
 
+        socket.on("join-admin-room", () => {
+            socket.join("admin-room");
+            console.log(`🛡️ Socket ${socket.id} joined admin room`);
+        });
+
         socket.on("join-order-room", (orderID: string) => {
             socket.join(orderID);
             console.log(`📦 Socket ${socket.id} joined order room: ${orderID}`);

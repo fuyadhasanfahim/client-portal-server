@@ -1,5 +1,5 @@
-import NotificationModel from "../models/notification.model";
-import UserModel from "../models/user.model";
+import NotificationModel from "../models/notification.model.js";
+import UserModel from "../models/user.model.js";
 
 async function getNotificationsFromDB(userID: string) {
     const user = await UserModel.findOne({ userID });

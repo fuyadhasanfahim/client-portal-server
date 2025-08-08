@@ -1,4 +1,4 @@
-import UserModel from "../models/user.model";
+import UserModel from "../models/user.model.js";
 
 export const getAdminIDs = async (): Promise<string[]> => {
     const admins = await UserModel.find({

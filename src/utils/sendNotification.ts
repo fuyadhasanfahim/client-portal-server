@@ -1,6 +1,6 @@
-import NotificationModel from "../models/notification.model";
-import { io } from "../server";
-import { getAdminIDs } from "./getAdminIDs";
+import NotificationModel from "../models/notification.model.js";
+import { io } from "../server.js";
+import { getAdminIDs } from "./getAdminIDs.js";
 
 interface SendNotificationParams {
     title: string;

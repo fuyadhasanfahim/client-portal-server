@@ -8,6 +8,7 @@ import {
     IOrderServiceSelection,
 } from "../types/order.interface.js";
 import { IPayment } from "../types/payment.interface.js";
+import RevisionModel from "../models/revision.model.js";
 
 async function newOrderInDB({
     orderStage,
@@ -267,14 +268,59 @@ async function deliverOrderToClient({ orderID }: { orderID: string }) {
     return order;
 }
 
-async function reviewOrderToAdmin({ orderID }: { orderID: string }) {
+async function reviewOrderToAdmin({
+    orderID,
+    instructions,
+}: {
+    orderID: string;
+    instructions: string;
+}) {
     const order = await OrderModel.findOneAndUpdate(
         { orderID },
         { status: "in-revision" },
         { new: true }
     );
+    if (!order) throw new Error("Order not found");
 
-    return order;
+    const user = await UserModel.findOne({ userID: order.user.userID });
+    if (!user) throw new Error("User not found");
+
+    const now = new Date();
+    const message = {
+        senderID: user.userID,
+        senderName: user.name,
+        senderProfileImage: user.image ?? "",
+        senderRole: "user" as const,
+        message: instructions,
+        createdAt: now,
+    };
+
+    const revision = await RevisionModel.findOneAndUpdate(
+        { orderID },
+        {
+            $setOnInsert: {
+                orderID,
+                lastSeenAtAdmin: null,
+            },
+            $set: {
+                status: "open",
+                isSeenByAdmin: false,
+                isSeenByUser: true,
+                lastSeenAtUser: now,
+                lastMessageAt: now,
+            },
+            $push: {
+                messages: { $each: [message], $slice: -1000 },
+            },
+        },
+        { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
+
+    return { order, revision };
+}
+
+async function getRevisionByOrderID(orderID: string) {
+    return RevisionModel.findOne({ orderID }).lean();
 }
 
 async function completeOrderInDB({ orderID }: { orderID: string }) {
@@ -283,6 +329,32 @@ async function completeOrderInDB({ orderID }: { orderID: string }) {
         { status: "completed" },
         { new: true }
     );
+
+    if (order) {
+        const now = new Date();
+        await RevisionModel.updateOne(
+            { orderID },
+            {
+                $set: {
+                    status: "closed",
+                    isSeenByAdmin: true,
+                    isSeenByUser: true,
+                    updatedAt: now,
+                    lastMessageAt: now,
+                },
+                $push: {
+                    messages: {
+                        senderID: "system",
+                        senderRole: "system",
+                        senderName: "System",
+                        senderProfileImage: "",
+                        message: "Order marked as completed. Revision closed.",
+                        createdAt: now,
+                    },
+                },
+            }
+        );
+    }
 
     return order;
 }
@@ -383,6 +455,7 @@ const OrderServices = {
     updateOrderInDB,
     deliverOrderToClient,
     reviewOrderToAdmin,
+    getRevisionByOrderID,
     completeOrderInDB,
     getOrdersByStatusFromDB,
     getOrdersByUserIDFromDB,

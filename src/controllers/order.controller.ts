@@ -1,3 +1,4 @@
+// controllers/order.controller.ts
 import { Request, Response } from "express";
 import OrderServices from "../services/order.service.js";
 import { sendEmail } from "../lib/nodemailer.js";
@@ -14,7 +15,8 @@ import { io } from "../server.js";
 async function newOrder(req: Request, res: Response) {
     try {
         const { orderStage } = req.params;
-        const { userID, services, orderID, details, total, payment } = req.body;
+        const { userID, services, orderID, details, total, payment } =
+            req.body ?? {};
 
         if (!orderStage || !userID) {
             res.status(400).json({
@@ -75,17 +77,14 @@ async function getOrders(req: Request, res: Response) {
             userID: userID as string,
             role: role as string,
             search: search as string,
-            page: parseFloat(page as string),
-            limit: parseFloat(limit as string),
+            page: Number(page),
+            limit: Number(limit),
             sortBy: sortBy as string,
             filter: filter as string,
             sortOrder: sortOrder as "asc" | "desc",
         });
 
-        res.status(200).json({
-            success: true,
-            data: response,
-        });
+        res.status(200).json({ success: true, data: response });
     } catch (error) {
         res.status(500).json({
             success: false,
@@ -123,17 +122,14 @@ async function getDraftOrders(req: Request, res: Response) {
             userID: userID as string,
             role: role as string,
             search: search as string,
-            page: parseFloat(page as string),
-            limit: parseFloat(limit as string),
+            page: Number(page),
+            limit: Number(limit),
             sortBy: sortBy as string,
             filter: filter as string,
             sortOrder: sortOrder as "asc" | "desc",
         });
 
-        res.status(200).json({
-            success: true,
-            data: response,
-        });
+        res.status(200).json({ success: true, data: response });
     } catch (error) {
         res.status(500).json({
             success: false,
@@ -168,10 +164,7 @@ async function getOrderByID(req: Request, res: Response) {
             return;
         }
 
-        res.status(200).json({
-            success: true,
-            data: order,
-        });
+        res.status(200).json({ success: true, data: order });
     } catch (error) {
         res.status(500).json({
             success: false,
@@ -228,9 +221,7 @@ async function updateOrder(req: Request, res: Response) {
 
         io.to(orderID).emit("order-updated");
 
-        res.status(200).json({
-            success: true,
-        });
+        res.status(200).json({ success: true });
     } catch (error) {
         res.status(500).json({
             success: false,
@@ -300,9 +291,12 @@ async function deliverOrder(req: Request, res: Response) {
 
 async function reviewOrder(req: Request, res: Response) {
     try {
-        const { orderID, instructions } = req.body;
+        const { orderID, instructions } = req.body as {
+            orderID?: string;
+            instructions?: string;
+        };
 
-        if (!orderID || !instructions) {
+        if (!orderID || !instructions?.trim()) {
             res.status(400).json({
                 success: false,
                 message: "Order ID and instructions are required.",
@@ -310,17 +304,20 @@ async function reviewOrder(req: Request, res: Response) {
             return;
         }
 
-        const order = await OrderServices.reviewOrderToAdmin({
+        const result = await OrderServices.reviewOrderToAdmin({
             orderID,
+            instructions,
         });
 
-        if (!order) {
+        if (!result) {
             res.status(404).json({
                 success: false,
-                message: "Order not found",
+                message: "Order not found or already in revision.",
             });
             return;
         }
+
+        const { order, revision } = result;
 
         await sendEmail({
             to: order.user.email,
@@ -348,12 +345,39 @@ async function reviewOrder(req: Request, res: Response) {
             link: `${envConfig.frontend_url}/orders/details/${orderID}`,
         });
 
+        io.to(orderID).emit("revision-updated");
         io.to(orderID).emit("order-updated");
 
         res.status(200).json({
             success: true,
             message: "Revision request submitted successfully.",
+            revision,
         });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "An error occurred while processing your request",
+            error:
+                error instanceof Error
+                    ? error.message
+                    : "Internal server error",
+        });
+    }
+} // 👈 this closing brace was missing
+
+async function getRevision(req: Request, res: Response) {
+    try {
+        const orderID = String(req.params.orderID ?? "").trim();
+        if (!orderID) {
+            res.status(400).json({
+                success: false,
+                message: "Order ID is required.",
+            });
+            return;
+        }
+
+        const revision = await OrderServices.getRevisionByOrderID(orderID);
+        res.status(200).json({ success: true, revision });
     } catch (error) {
         res.status(500).json({
             success: false,
@@ -368,8 +392,7 @@ async function reviewOrder(req: Request, res: Response) {
 
 async function completeOrder(req: Request, res: Response) {
     try {
-        const { orderID } = req.body;
-
+        const { orderID } = req.body as { orderID?: string };
         if (!orderID) {
             res.status(400).json({
                 success: false,
@@ -379,7 +402,6 @@ async function completeOrder(req: Request, res: Response) {
         }
 
         const order = await OrderServices.completeOrderInDB({ orderID });
-
         if (!order) {
             res.status(404).json({
                 success: false,
@@ -403,6 +425,7 @@ async function completeOrder(req: Request, res: Response) {
         });
 
         io.to(orderID).emit("order-updated");
+        io.to(orderID).emit("revision-updated");
 
         res.status(200).json({
             success: true,
@@ -424,10 +447,7 @@ async function completeOrder(req: Request, res: Response) {
 async function getOrdersByStatus(req: Request, res: Response) {
     try {
         const { status } = req.params;
-        const { userID, role } = req.query as {
-            userID: string;
-            role: string;
-        };
+        const { userID, role } = req.query as { userID: string; role: string };
 
         if (!status || !userID || !role) {
             res.status(400).json({
@@ -451,10 +471,7 @@ async function getOrdersByStatus(req: Request, res: Response) {
             return;
         }
 
-        res.status(200).json({
-            success: true,
-            data: orders,
-        });
+        res.status(200).json({ success: true, data: orders });
     } catch (error) {
         res.status(500).json({
             success: false,
@@ -490,8 +507,8 @@ async function getOrdersByUserID(req: Request, res: Response) {
             await OrderServices.getOrdersByUserIDFromDB({
                 userID: userID as string,
                 search: search as string,
-                page: parseFloat(page as string),
-                limit: parseFloat(limit as string),
+                page: Number(page),
+                limit: Number(limit),
                 filter: filter as string,
                 sort: sort as string,
             });
@@ -504,10 +521,7 @@ async function getOrdersByUserID(req: Request, res: Response) {
             return;
         }
 
-        res.status(200).json({
-            success: true,
-            data: { orders, pagination },
-        });
+        res.status(200).json({ success: true, data: { orders, pagination } });
     } catch (error) {
         res.status(500).json({
             success: false,
@@ -528,6 +542,7 @@ const OrderControllers = {
     updateOrder,
     deliverOrder,
     reviewOrder,
+    getRevision,
     completeOrder,
     getOrdersByStatus,
     getOrdersByUserID,

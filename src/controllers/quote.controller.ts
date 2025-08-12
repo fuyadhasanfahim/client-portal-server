@@ -263,7 +263,7 @@ async function reviewQuote(req: Request, res: Response) {
     try {
         const { quoteID, instructions } = req.body;
 
-        if (!quoteID || !instructions) {
+        if (!quoteID || !instructions.trim()) {
             res.status(400).json({
                 success: false,
                 message: "Quote ID and instructions are required.",
@@ -271,17 +271,20 @@ async function reviewQuote(req: Request, res: Response) {
             return;
         }
 
-        const quote = await QuoteServices.reviewQuoteToAdmin({
+        const result = await QuoteServices.reviewQuoteToAdmin({
             quoteID,
+            instructions,
         });
 
-        if (!quote) {
+        if (!result) {
             res.status(404).json({
                 success: false,
-                message: "Quote not found",
+                message: "Quote not found or already in revision.",
             });
             return;
         }
+
+        const { quote, revision } = result;
 
         await sendEmail({
             to: quote.user.email,
@@ -310,11 +313,39 @@ async function reviewQuote(req: Request, res: Response) {
         });
 
         io.to(quoteID).emit("quote-updated");
+        io.to(quoteID).emit("revision-updated");
 
         res.status(200).json({
             success: true,
             message: "Revision request submitted successfully.",
+            revision,
         });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "An error occurred while processing your request",
+            error:
+                error instanceof Error
+                    ? error.message
+                    : "Internal server error",
+        });
+    }
+}
+
+async function getRevision(req: Request, res: Response) {
+    try {
+        const quoteID = String(req.params.quoteID ?? "").trim();
+        if (!quoteID) {
+            res.status(400).json({
+                success: false,
+                message: "Order ID is required.",
+            });
+            return;
+        }
+
+        const revision = await QuoteServices.getRevisionByQuoteID(quoteID);
+
+        res.status(200).json({ success: true, revision });
     } catch (error) {
         res.status(500).json({
             success: false,
@@ -364,6 +395,7 @@ async function completeQuote(req: Request, res: Response) {
         });
 
         io.to(quoteID).emit("quote-updated");
+        io.to(quoteID).emit("revision-updated");
 
         res.status(200).json({
             success: true,
@@ -488,6 +520,7 @@ const QuoteControllers = {
     updateQuote,
     deliverQuote,
     reviewQuote,
+    getRevision,
     completeQuote,
     getQuotesByStatus,
     getQuotesByUserID,

@@ -3,6 +3,7 @@ import { nanoid } from "nanoid";
 import QuoteModel from "../models/quote.model.js";
 import UserModel from "../models/user.model.js";
 import { IQuote } from "../types/quote.interface.js";
+import RevisionModel from "../models/revision.model.js";
 
 async function newQuoteInDB({
     quoteStage,
@@ -149,14 +150,60 @@ async function deliverQuoteToClient({ quoteID }: { quoteID: string }) {
     return quote;
 }
 
-async function reviewQuoteToAdmin({ quoteID }: { quoteID: string }) {
+async function reviewQuoteToAdmin({
+    quoteID,
+    instructions,
+}: {
+    quoteID: string;
+    instructions: string;
+}) {
     const quote = await QuoteModel.findOneAndUpdate(
         { quoteID },
         { status: "in-revision" },
         { new: true }
     );
 
-    return quote;
+    if (!quote) throw new Error("Quote not found");
+
+    const user = await UserModel.findOne({ userID: quote.user.userID });
+    if (!user) throw new Error("User not found");
+
+    const now = new Date();
+    const message = {
+        senderID: user.userID,
+        senderName: user.name,
+        senderProfileImage: user.image ?? "",
+        senderRole: "user" as const,
+        message: instructions,
+        createdAt: now,
+    };
+
+    const revision = await RevisionModel.findOneAndUpdate(
+        { quoteID },
+        {
+            $setOnInsert: {
+                quoteID,
+                lastSeenAtAdmin: null,
+            },
+            $set: {
+                status: "open",
+                isSeenByAdmin: false,
+                isSeenByUser: true,
+                lastSeenAtUser: now,
+                lastMessageAt: now,
+            },
+            $push: {
+                messages: { $each: [message], $slice: -1000 },
+            },
+        },
+        { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
+
+    return { quote, revision };
+}
+
+async function getRevisionByQuoteID(quoteID: string) {
+    return RevisionModel.findOne({ quoteID }).lean();
 }
 
 async function completeQuoteInDB({ quoteID }: { quoteID: string }) {
@@ -165,6 +212,33 @@ async function completeQuoteInDB({ quoteID }: { quoteID: string }) {
         { status: "completed" },
         { new: true }
     );
+
+
+    if (quote) {
+        const now = new Date();
+        await RevisionModel.updateOne(
+            { quoteID },
+            {
+                $set: {
+                    status: "closed",
+                    isSeenByAdmin: true,
+                    isSeenByUser: true,
+                    updatedAt: now,
+                    lastMessageAt: now,
+                },
+                $push: {
+                    messages: {
+                        senderID: "system",
+                        senderRole: "system",
+                        senderName: "System",
+                        senderProfileImage: "",
+                        message: "Quote marked as completed. Revision closed.",
+                        createdAt: now,
+                    },
+                },
+            }
+        );
+    }
 
     return quote;
 }
@@ -264,6 +338,7 @@ const QuoteServices = {
     updateQuoteInDB,
     deliverQuoteToClient,
     reviewQuoteToAdmin,
+    getRevisionByQuoteID,
     completeQuoteInDB,
     getQuotesByStatusFromDB,
     getQuotesByUserIDFromDB,

@@ -11,6 +11,8 @@ import {
 import { getOrderCompletionEmail } from "../html-templates/getOrderCompletionEmail.js";
 import { sendNotification } from "../utils/sendNotification.js";
 import { io } from "../server.js";
+import { OrderModel } from "../models/order.model.js";
+import RevisionModel from "../models/revision.model.js";
 
 async function newOrder(req: Request, res: Response) {
     try {
@@ -363,7 +365,7 @@ async function reviewOrder(req: Request, res: Response) {
                     : "Internal server error",
         });
     }
-} // 👈 this closing brace was missing
+}
 
 async function getRevision(req: Request, res: Response) {
     try {
@@ -392,16 +394,20 @@ async function getRevision(req: Request, res: Response) {
 
 async function completeOrder(req: Request, res: Response) {
     try {
-        const { orderID } = req.body as { orderID?: string };
-        if (!orderID) {
+        const { orderID, deliveryLink } = req.body;
+
+        if (!orderID || !deliveryLink) {
             res.status(400).json({
                 success: false,
-                message: "Order ID is required.",
+                message: "Order id & delivery link is required.",
             });
             return;
         }
 
-        const order = await OrderServices.completeOrderInDB({ orderID });
+        const order = await OrderServices.completeOrderInDB({
+            orderID,
+            deliveryLink,
+        });
         if (!order) {
             res.status(404).json({
                 success: false,
@@ -534,6 +540,105 @@ async function getOrdersByUserID(req: Request, res: Response) {
     }
 }
 
+function truncate(s: string, n = 120) {
+    return s.length > n ? s.slice(0, n - 1) + "…" : s;
+}
+
+async function sendRevisionMessage(req: Request, res: Response) {
+    try {
+        const {
+            orderID,
+            message,
+            senderID,
+            senderName,
+            senderRole,
+            senderProfileImage = "",
+        } = req.body;
+
+        if (
+            !orderID ||
+            !message?.trim() ||
+            !senderID ||
+            !senderName ||
+            !senderRole
+        ) {
+            res.status(400).json({
+                success: false,
+                message:
+                    "orderID, message, senderID, senderName, senderRole are required.",
+            });
+            return;
+        }
+        console.log("Order id:", orderID);
+
+        const order = await OrderModel.findOne({ orderID });
+        if (!order) {
+            res.status(404).json({
+                success: false,
+                message: "Order not found",
+            });
+            return;
+        }
+
+        const now = new Date();
+        const msg = {
+            senderID,
+            senderName,
+            senderProfileImage,
+            senderRole,
+            message,
+            createdAt: now,
+        };
+
+        const setFields = {
+            lastMessageAt: now,
+            isSeenByAdmin: senderRole === "admin",
+            isSeenByUser: senderRole === "user",
+            lastSeenAtAdmin: senderRole === "admin" ? now : null,
+            lastSeenAtUser: senderRole === "user" ? now : null,
+        };
+
+        const revision = await RevisionModel.findOneAndUpdate(
+            { orderID },
+            {
+                $setOnInsert: { orderID },
+                $set: setFields,
+                $push: { messages: { $each: [msg], $slice: -1000 } },
+            },
+            { new: true, upsert: true, setDefaultsOnInsert: true }
+        );
+
+        if (senderRole === "user") {
+            await sendNotification({
+                isAdmin: true,
+                title: `💬 New revision message — Order #${orderID}`,
+                message: truncate(message),
+                link: `${envConfig.frontend_url}/orders/details/${orderID}`,
+            });
+        } else {
+            await sendNotification({
+                userID: order.user.userID,
+                title: `💬 New reply on your revision — Order #${orderID}`,
+                message: truncate(message),
+                link: `${envConfig.frontend_url}/orders/details/${orderID}`,
+            });
+        }
+
+        io.to(orderID).emit("revision-updated");
+
+        res.status(200).json({ success: true, revision });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "An error occurred while processing your request",
+            error:
+                error instanceof Error
+                    ? error.message
+                    : "Internal server error",
+        });
+    }
+}
+
 const OrderControllers = {
     getOrders,
     getDraftOrders,
@@ -546,6 +651,7 @@ const OrderControllers = {
     completeOrder,
     getOrdersByStatus,
     getOrdersByUserID,
+    sendRevisionMessage,
 };
 
 export default OrderControllers;

@@ -23,7 +23,7 @@ const QuoteUserSchema = new Schema<IQuoteUser>(
             required: true,
         },
         image: {
-            type: String
+            type: String,
         },
         company: {
             type: String,
@@ -120,6 +120,10 @@ const QuoteDetailsSchema = new Schema<IQuoteDetails>(
             type: String,
             required: false,
         },
+        deliveryLink: {
+            type: String,
+            required: false,
+        },
         images: {
             type: Number,
             required: false,
@@ -175,6 +179,10 @@ const QuoteSchema = new Schema<IQuote>(
         details: {
             type: QuoteDetailsSchema,
             required: false,
+        },
+        isRevision: {
+            type: Boolean,
+            default: false,
         },
         status: {
             type: String,

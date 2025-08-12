@@ -53,6 +53,10 @@ const OrderDetailsSchema = new Schema<IOrderDetails>(
     {
         deliveryDate: { type: Date },
         downloadLink: { type: String },
+        deliveryLink: {
+            type: String,
+            required: false,
+        },
         images: { type: Number },
         returnFileFormat: [{ type: String }],
         backgroundOption: [{ type: String }],
@@ -73,6 +77,10 @@ export const OrderSchema = new Schema<IOrder>(
         details: { type: OrderDetailsSchema },
         total: {
             type: Number,
+        },
+        isRevision: {
+            type: Boolean,
+            default: false,
         },
         status: {
             type: String,

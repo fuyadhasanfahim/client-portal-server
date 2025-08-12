@@ -277,7 +277,7 @@ async function reviewOrderToAdmin({
 }) {
     const order = await OrderModel.findOneAndUpdate(
         { orderID },
-        { status: "in-revision" },
+        { status: "in-revision", isRevision: true },
         { new: true }
     );
     if (!order) throw new Error("Order not found");
@@ -323,10 +323,16 @@ async function getRevisionByOrderID(orderID: string) {
     return RevisionModel.findOne({ orderID }).lean();
 }
 
-async function completeOrderInDB({ orderID }: { orderID: string }) {
+async function completeOrderInDB({
+    orderID,
+    deliveryLink,
+}: {
+    orderID: string;
+    deliveryLink: string;
+}) {
     const order = await OrderModel.findOneAndUpdate(
         { orderID },
-        { status: "completed" },
+        { status: "completed", deliveryLink },
         { new: true }
     );
 

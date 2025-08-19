@@ -1,15 +1,10 @@
 import { Request, Response } from "express";
 import QuoteServices from "../services/quote.service.js";
 import envConfig from "../config/env.config.js";
-import { deliveryEmail } from "../html-templates/deliveryEmail.js";
 import { sendEmail } from "../lib/nodemailer.js";
-import {
-    getAdminRevisionEmail,
-    getCustomerRevisionEmail,
-} from "../html-templates/getRevisionRequestEmail.js";
-import { getQuoteCompletionEmail } from "../html-templates/getQuoteCompletionEmail.js";
 import { sendNotification } from "../utils/sendNotification.js";
 import { io } from "../server.js";
+import { buildSimpleQuoteStatusEmail } from "../lib/EmailTemplate.js";
 
 async function newQuote(req: Request, res: Response) {
     try {
@@ -227,11 +222,19 @@ async function deliverQuote(req: Request, res: Response) {
             return;
         }
 
+        const { subject, html } = buildSimpleQuoteStatusEmail({
+            quoteID,
+            status: quote.status,
+            userName: quote.user.name,
+            userEmail: quote.user.email,
+            viewUrl: `${envConfig.frontend_url}/quotes/details/${quoteID}`,
+        });
+
         await sendEmail({
             to: quote.user.email,
             from: envConfig.email_user!,
-            subject: `Your Quote #${quoteID} Has Been Delivered!`,
-            html: deliveryEmail(quoteID, downloadLink),
+            subject,
+            html,
         });
 
         await sendNotification({
@@ -286,23 +289,26 @@ async function reviewQuote(req: Request, res: Response) {
 
         const { quote, revision } = result;
 
+        const { subject, html } = buildSimpleQuoteStatusEmail({
+            quoteID,
+            status: quote.status,
+            userName: quote.user.name,
+            userEmail: quote.user.email,
+            viewUrl: `${envConfig.frontend_url}/quotes/details/${quoteID}`,
+        });
+
         await sendEmail({
             to: quote.user.email,
             from: envConfig.email_user!,
-            subject: `Revision Request Submitted for Quote #${quoteID}`,
-            html: getCustomerRevisionEmail(quoteID, quote.user.name),
+            subject,
+            html,
         });
 
         await sendEmail({
             to: envConfig.email_user!,
             from: quote.user.email,
-            subject: `[ACTION REQUIRED] Revision Request for Quote #${quoteID}`,
-            html: getAdminRevisionEmail(
-                quoteID,
-                quote.user.name,
-                quote.user.email,
-                instructions
-            ),
+            subject,
+            html,
         });
 
         await sendNotification({
@@ -380,11 +386,19 @@ async function completeQuote(req: Request, res: Response) {
             return;
         }
 
+        const { subject, html } = buildSimpleQuoteStatusEmail({
+            quoteID,
+            status: quote.status,
+            userName: quote.user.name,
+            userEmail: quote.user.email,
+            viewUrl: `${envConfig.frontend_url}/quotes/details/${quoteID}`,
+        });
+
         await sendEmail({
             to: quote.user.email,
             from: envConfig.email_user!,
-            subject: `Quote #${quoteID} Completed!`,
-            html: getQuoteCompletionEmail(quoteID, quote.user.name),
+            subject,
+            html,
         });
 
         await sendNotification({

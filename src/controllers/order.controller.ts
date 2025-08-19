@@ -1,18 +1,12 @@
-// controllers/order.controller.ts
 import { Request, Response } from "express";
 import OrderServices from "../services/order.service.js";
 import { sendEmail } from "../lib/nodemailer.js";
-import { deliveryEmail } from "../html-templates/deliveryEmail.js";
 import envConfig from "../config/env.config.js";
-import {
-    getAdminRevisionEmail,
-    getCustomerRevisionEmail,
-} from "../html-templates/getRevisionRequestEmail.js";
-import { getOrderCompletionEmail } from "../html-templates/getOrderCompletionEmail.js";
 import { sendNotification } from "../utils/sendNotification.js";
 import { io } from "../server.js";
 import { OrderModel } from "../models/order.model.js";
 import RevisionModel from "../models/revision.model.js";
+import { buildSimpleOrderStatusEmail } from "../lib/EmailTemplate.js";
 
 async function newOrder(req: Request, res: Response) {
     try {
@@ -238,9 +232,9 @@ async function updateOrder(req: Request, res: Response) {
 
 async function deliverOrder(req: Request, res: Response) {
     try {
-        const { orderID, downloadLink } = req.body;
+        const { orderID, deliveryLink } = req.body;
 
-        if (!orderID || !downloadLink) {
+        if (!orderID || !deliveryLink) {
             res.status(400).json({
                 success: false,
                 message:
@@ -249,7 +243,7 @@ async function deliverOrder(req: Request, res: Response) {
             return;
         }
 
-        const order = await OrderServices.deliverOrderToClient({ orderID });
+        const order = await OrderServices.deliverOrderToClient({ orderID, deliveryLink });
 
         if (!order) {
             res.status(404).json({
@@ -259,11 +253,19 @@ async function deliverOrder(req: Request, res: Response) {
             return;
         }
 
+        const { subject, html } = buildSimpleOrderStatusEmail({
+            orderID,
+            status: order.status,
+            userName: order.user.name,
+            userEmail: order.user.email,
+            viewUrl: `${envConfig.frontend_url}/orders/details/${orderID}`,
+        });
+
         await sendEmail({
             to: order.user.email,
             from: envConfig.email_user!,
-            subject: `Your Order #${orderID} Has Been Delivered!`,
-            html: deliveryEmail(orderID, downloadLink),
+            subject,
+            html,
         });
 
         await sendNotification({
@@ -321,23 +323,26 @@ async function reviewOrder(req: Request, res: Response) {
 
         const { order, revision } = result;
 
+        const { subject, html } = buildSimpleOrderStatusEmail({
+            orderID,
+            status: order.status,
+            userName: order.user.name,
+            userEmail: order.user.email,
+            viewUrl: `${envConfig.frontend_url}/orders/details/${orderID}`,
+        });
+
         await sendEmail({
             to: order.user.email,
             from: envConfig.email_user!,
-            subject: `Revision Request Submitted for Order #${orderID}`,
-            html: getCustomerRevisionEmail(orderID, order.user.name),
+            subject,
+            html,
         });
 
         await sendEmail({
             to: envConfig.email_user!,
             from: order.user.email,
-            subject: `[ACTION REQUIRED] Revision Request for Order #${orderID}`,
-            html: getAdminRevisionEmail(
-                orderID,
-                order.user.name,
-                order.user.email,
-                instructions
-            ),
+            subject,
+            html,
         });
 
         await sendNotification({
@@ -416,11 +421,19 @@ async function completeOrder(req: Request, res: Response) {
             return;
         }
 
+        const { subject, html } = buildSimpleOrderStatusEmail({
+            orderID,
+            status: order.status,
+            userName: order.user.name,
+            userEmail: order.user.email,
+            viewUrl: `${envConfig.frontend_url}/orders/details/${orderID}`,
+        });
+
         await sendEmail({
             to: order.user.email,
             from: envConfig.email_user!,
-            subject: `Order #${orderID} Completed!`,
-            html: getOrderCompletionEmail(orderID, order.user.name),
+            subject,
+            html,
         });
 
         await sendNotification({

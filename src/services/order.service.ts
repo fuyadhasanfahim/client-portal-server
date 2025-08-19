@@ -258,10 +258,16 @@ async function updateOrderInDB({
     return updatedOrder;
 }
 
-async function deliverOrderToClient({ orderID }: { orderID: string }) {
+async function deliverOrderToClient({
+    orderID,
+    deliveryLink,
+}: {
+    orderID: string;
+    deliveryLink: string;
+}) {
     const order = await OrderModel.findOneAndUpdate(
         { orderID },
-        { status: "delivered" },
+        { status: "delivered", "details.deliveryLink": deliveryLink },
         { new: true }
     );
 

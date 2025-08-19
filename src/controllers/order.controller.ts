@@ -6,7 +6,7 @@ import { sendNotification } from "../utils/sendNotification.js";
 import { io } from "../server.js";
 import { OrderModel } from "../models/order.model.js";
 import RevisionModel from "../models/revision.model.js";
-import { buildSimpleOrderStatusEmail } from "../lib/EmailTemplate.js";
+import { buildSimpleOrderStatusEmail } from "../lib/emailTemplate.js";
 
 async function newOrder(req: Request, res: Response) {
     try {

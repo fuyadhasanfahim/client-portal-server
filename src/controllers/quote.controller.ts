@@ -4,7 +4,7 @@ import envConfig from "../config/env.config.js";
 import { sendEmail } from "../lib/nodemailer.js";
 import { sendNotification } from "../utils/sendNotification.js";
 import { io } from "../server.js";
-import { buildSimpleQuoteStatusEmail } from "../lib/EmailTemplate.js";
+import { buildSimpleQuoteStatusEmail } from "../lib/emailTemplate.js";
 
 async function newQuote(req: Request, res: Response) {
     try {

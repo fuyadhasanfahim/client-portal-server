@@ -1,5 +1,5 @@
 import { model, Schema } from "mongoose";
-import { IConversation, IParticipant } from "../types/conversation.intreface";
+import { IConversation, IParticipant } from "../types/conversation.interface.js";
 
 const participantSchema = new Schema<IParticipant>(
     {

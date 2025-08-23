@@ -1,5 +1,5 @@
 import { Schema, model } from "mongoose";
-import { IAttachment, IMessage, IReaction } from "../types/message.interface";
+import { IAttachment, IMessage, IReaction } from "../types/message.interface.js";
 
 const attachmentSchema = new Schema<IAttachment>(
     {

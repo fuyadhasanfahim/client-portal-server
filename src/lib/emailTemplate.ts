@@ -193,7 +193,7 @@ export const renderEmailTemplateNode = (props: EmailTemplateProps): string => {
     <div class="header">
       <div class="logo-section">
         <div class="logo-placeholder">
-          <img src="https://res.cloudinary.com/dny7zfbg9/image/upload/v1755089700/ba0yt6pzc8u6xmxuqir5.png" alt="WebBriks Logo" class="logo-image" />
+          <img src="https://res.cloudinary.com/dny7zfbg9/image/upload/v1755925557/uigjdstdcvlsngrtxbrl.png" alt="WebBriks Logo" class="logo-image" />
         </div>
       </div>
       <h1 class="header-title">${escapeHtml(emailTitle)}</h1>

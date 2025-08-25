@@ -1,18 +1,18 @@
 export interface IComplexity {
-    _id: string;
+    _id?: string;
     name: string;
     price: number;
 }
 
 export interface IType {
-    _id: string;
+    _id?: string;
     name: string;
     price?: number;
     complexities?: IComplexity[];
 }
 
 export interface IService {
-    _id: string;
+    _id?: string;
     name: string;
     price?: number;
     complexities?: IComplexity[];

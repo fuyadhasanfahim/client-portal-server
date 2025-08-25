@@ -4,5 +4,6 @@ import ServiceControllers from "../controllers/service.controller.js";
 const router = Router();
 
 router.get("/get-services", ServiceControllers.getServices);
+router.post("/new-service", ServiceControllers.newService);
 
 export const serviceRoute = router;

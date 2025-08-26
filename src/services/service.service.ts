@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import ServiceModel from "../models/service.model.js";
 import { IService } from "../types/service.interface.js";
 
@@ -16,7 +17,6 @@ async function getServicesFromDB({
     sortOrder?: "asc" | "desc";
     filter?: string;
 }) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const query: Record<string, any> = {};
 
     if (search && search.trim().length > 0) {
@@ -104,11 +104,43 @@ async function getServicesFromDB({
     };
 }
 
+async function getServiceFromDB(serviceID: string) {
+    const service = await ServiceModel.findById(serviceID);
+
+    return service;
+}
+
 async function newServiceInDB(data: IService) {
     const service = await ServiceModel.create(data);
 
     return service;
 }
 
-const ServiceServices = { getServicesFromDB, newServiceInDB };
+async function deleteServiceFromDB(serviceID: string) {
+    const service = await ServiceModel.findByIdAndDelete(serviceID);
+
+    return service;
+}
+
+async function editServiceInDB({
+    serviceID,
+    data,
+}: {
+    serviceID: string;
+    data: any;
+}) {
+    const service = await ServiceModel.findByIdAndUpdate(serviceID, data, {
+        new: true,
+    });
+
+    return service;
+}
+
+const ServiceServices = {
+    getServicesFromDB,
+    newServiceInDB,
+    deleteServiceFromDB,
+    getServiceFromDB,
+    editServiceInDB,
+};
 export default ServiceServices;

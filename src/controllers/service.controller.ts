@@ -51,12 +51,39 @@ async function getServices(req: Request, res: Response) {
     }
 }
 
+async function getService(req: Request, res: Response) {
+    try {
+        const { serviceID } = req.params;
+
+        if (!serviceID) {
+            res.status(400).json({
+                success: false,
+                message: "Service id is missing.",
+            });
+        }
+
+        const service = await ServiceServices.getServiceFromDB(serviceID);
+
+        res.status(200).json({
+            success: true,
+            data: service,
+        });
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({
+            success: false,
+            message: "An error occurred while processing your request",
+            error:
+                error instanceof Error
+                    ? error.message
+                    : "Something went wrong! Please try again later.",
+        });
+    }
+}
+
 async function newService(req: Request, res: Response) {
     try {
         const body = await req.body;
-        console.log("Headers:", req.headers);
-        console.log("Raw body:", req.body);
-        console.log("Content-Type:", req.get("Content-Type"));
 
         if (!body || typeof body !== "object") {
             res.status(400).json({ success: false, message: "No data found!" });
@@ -99,8 +126,70 @@ async function newService(req: Request, res: Response) {
     }
 }
 
+async function deleteService(req: Request, res: Response) {
+    try {
+        const { serviceID } = req.params;
+
+        if (!serviceID) {
+            res.status(400).json({
+                success: false,
+                message: "Service id is missing.",
+            });
+        }
+
+        await ServiceServices.deleteServiceFromDB(serviceID);
+
+        res.status(200).json({
+            success: true,
+            message: "Service deleted successfully.",
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "An error occurred while processing your request",
+            error:
+                error instanceof Error
+                    ? error.message
+                    : "Something went wrong! Please try again later.",
+        });
+    }
+}
+
+async function editService(req: Request, res: Response) {
+    try {
+        const { serviceID } = req.params;
+        const data = req.body;
+
+        if (!serviceID) {
+            res.status(400).json({
+                success: false,
+                message: "Service id is missing.",
+            });
+        }
+
+        await ServiceServices.editServiceInDB({ serviceID, data });
+
+        res.status(200).json({
+            success: true,
+            message: "Service edited successfully.",
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "An error occurred while processing your request",
+            error:
+                error instanceof Error
+                    ? error.message
+                    : "Something went wrong! Please try again later.",
+        });
+    }
+}
+
 const ServiceControllers = {
     getServices,
     newService,
+    deleteService,
+    getService,
+    editService,
 };
 export default ServiceControllers;

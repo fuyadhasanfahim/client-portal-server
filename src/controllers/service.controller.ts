@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import ServiceServices from "../services/service.service.js";
-import z from "zod";
+import { AddServiceSchema } from "../validators/service.validator.js";
 
 async function getServices(req: Request, res: Response) {
     try {
@@ -51,51 +51,26 @@ async function getServices(req: Request, res: Response) {
     }
 }
 
-const complexitySchema = z.object({
-    name: z.string().min(1, "Complexity name is required"),
-    price: z.coerce.number().min(0, "Price must be ≥ 0"),
-});
-const typeSchema = z.object({
-    name: z.string().min(1, "Type name is required"),
-    price: z.coerce
-        .number()
-        .min(0)
-        .optional()
-        .or(z.nan().transform(() => undefined)),
-    complexities: z.array(complexitySchema).optional(),
-});
-const serviceSchema = z.object({
-    name: z.string().min(1, "Service name is required"),
-    price: z.coerce
-        .number()
-        .min(0)
-        .optional()
-        .or(z.nan().transform(() => undefined)),
-    complexities: z.array(complexitySchema).optional(),
-    types: z.array(typeSchema).optional(),
-    options: z.boolean().default(false),
-    inputs: z.boolean().default(false),
-    instruction: z.string().optional(),
-    disabledOptions: z.array(z.string().min(1)).optional(),
-});
-
 async function newService(req: Request, res: Response) {
     try {
-        const body = req.body;
+        const body = await req.body;
+        console.log("Headers:", req.headers);
+        console.log("Raw body:", req.body);
+        console.log("Content-Type:", req.get("Content-Type"));
 
         if (!body || typeof body !== "object") {
-            return res
-                .status(400)
-                .json({ success: false, message: "No data found!" });
+            res.status(400).json({ success: false, message: "No data found!" });
+            return;
         }
 
-        const parsed = serviceSchema.safeParse(req.body);
+        const parsed = AddServiceSchema.safeParse(req.body);
         if (!parsed.success) {
-            return res.status(422).json({
+            res.status(422).json({
                 success: false,
                 message: "Validation failed",
                 issues: parsed.error.issues,
             });
+            return;
         }
 
         const service = await ServiceServices.newServiceInDB(parsed.data);

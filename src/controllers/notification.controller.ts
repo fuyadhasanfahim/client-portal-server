@@ -3,7 +3,7 @@ import NotificationServices from "../services/notification.service.js";
 
 async function getNotifications(req: Request, res: Response) {
     try {
-        const { userID } = req.query;
+        const { userID, page = "1", limit = "20" } = req.query;
 
         if (!userID) {
             res.status(400).json({
@@ -13,13 +13,27 @@ async function getNotifications(req: Request, res: Response) {
             return;
         }
 
-        const notifications = await NotificationServices.getNotificationsFromDB(
-            userID as string
-        );
+        const pageNum = parseInt(page as string, 10);
+        const limitNum = parseInt(limit as string, 10);
+
+        if (pageNum < 1 || limitNum < 1 || limitNum > 50) {
+            res.status(400).json({
+                success: false,
+                message:
+                    "Invalid pagination parameters. Page must be >= 1, limit must be between 1-50",
+            });
+            return;
+        }
+
+        const result = await NotificationServices.getNotificationsFromDB({
+            userID: userID as string,
+            page: pageNum as number,
+            limit: limitNum as number,
+        });
 
         res.status(200).json({
             success: true,
-            notifications,
+            data: result,
         });
     } catch (error) {
         res.status(500).json({
@@ -61,5 +75,38 @@ async function updateNotification(req: Request, res: Response) {
     }
 }
 
-const NotificationControllers = { getNotifications, updateNotification };
+async function markAllNotificationsAsRead(req: Request, res: Response) {
+    try {
+        const { userID } = req.body;
+
+        if (!userID) {
+            res.status(400).json({
+                success: false,
+                message: "User ID is required",
+            });
+            return;
+        }
+
+        await NotificationServices.markAllNotificationsAsReadInDB(userID);
+
+        res.status(200).json({
+            success: true,
+            message: "All notifications marked as read",
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message:
+                error instanceof Error
+                    ? error.message
+                    : "Internal Server Error",
+        });
+    }
+}
+
+const NotificationControllers = {
+    getNotifications,
+    updateNotification,
+    markAllNotificationsAsRead,
+};
 export default NotificationControllers;

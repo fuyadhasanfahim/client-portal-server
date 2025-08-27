@@ -9,5 +9,9 @@ router.put(
     "/update-notification/:notificationID",
     NotificationControllers.updateNotification
 );
+router.put(
+    "/mark-all-as-read-notification",
+    NotificationControllers.markAllNotificationsAsRead
+);
 
 export const notificationRoute = router;

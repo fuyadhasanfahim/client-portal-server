@@ -243,7 +243,10 @@ async function deliverOrder(req: Request, res: Response) {
             return;
         }
 
-        const order = await OrderServices.deliverOrderToClient({ orderID, deliveryLink });
+        const order = await OrderServices.deliverOrderToClient({
+            orderID,
+            deliveryLink,
+        });
 
         if (!order) {
             res.status(404).json({
@@ -282,6 +285,7 @@ async function deliverOrder(req: Request, res: Response) {
             message: "Order delivered successfully and customer notified.",
         });
     } catch (error) {
+        console.log(error);
         res.status(500).json({
             success: false,
             message: "An error occurred while processing your request",

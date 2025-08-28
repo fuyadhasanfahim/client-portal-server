@@ -34,6 +34,20 @@ export default function registerSocketHandlers(io: Server) {
             console.log(`📦 Socket ${socket.id} left quote room: ${quoteID}`);
         });
 
+        socket.on("join-user-room", (userID) => socket.join(userID));
+        socket.on("join-admin-room", () => socket.join("admin-room"));
+        socket.on("join-order-room", (orderID) => socket.join(orderID));
+        socket.on("leave-order-room", (orderID) => socket.leave(orderID));
+        socket.on("join-quote-room", (quoteID) => socket.join(quoteID));
+        socket.on("leave-quote-room", (quoteID) => socket.leave(quoteID));
+
+        socket.on("join-conversation", (conversationID) => {
+            socket.join(`conversation:${conversationID}`);
+        });
+        socket.on("leave-conversation", (conversationID) => {
+            socket.leave(`conversation:${conversationID}`);
+        });
+
         socket.on("disconnect", () => {
             console.log("🔴 Socket disconnected:", socket.id);
         });

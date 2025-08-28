@@ -1,5 +1,9 @@
 import { Schema, model } from "mongoose";
-import { IAttachment, IMessage, IReaction } from "../types/message.interface.js";
+import {
+    IAttachment,
+    IMessage,
+    IReaction,
+} from "../types/message.interface.js";
 
 const attachmentSchema = new Schema<IAttachment>(
     {
@@ -52,6 +56,8 @@ const messageSchema = new Schema<IMessage>(
         versionKey: false,
     }
 );
+
+messageSchema.index({ conversationID: 1, _id: -1 });
 
 const MessageModel = model<IMessage>("Message", messageSchema);
 export default MessageModel;

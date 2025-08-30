@@ -1,38 +1,21 @@
-export type ConversationType = "support" | "internal";
-export type ConversationStatus =
-    | "pending"
-    | "active"
-    | "waiting"
-    | "resolved"
-    | "closed";
-
-export interface IParticipant {
+export type IParticipant = {
     userID: string;
     name: string;
     email: string;
     image?: string;
-    role: "user" | "admin";
     isOnline: boolean;
     lastSeenAt?: Date;
-    lastReadAt?: Date;
-}
+    role?: "admin" | "user";
+};
 
-export interface IConversation {
+export type IConversation = {
     _id: string;
-
     participants: IParticipant[];
-
-    type: ConversationType;
-    status: ConversationStatus;
-
     lastMessageAt: Date;
-    lastMessageText?: string;
-    lastMessageAuthorId?: string;
     unread?: number;
-
-    createdByUserId: string;
-    assignedAgentId?: string | null;
-
-    tags?: string[];
-    slaDueAt?: Date;
-}
+    lastMessageText?: string;
+    lastMessageAuthorID?: string;
+    type?: "dm";
+    createdAt?: Date;
+    updatedAt?: Date;
+};

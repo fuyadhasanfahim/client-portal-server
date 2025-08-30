@@ -9,6 +9,7 @@ interface TokenPayload extends jwt.JwtPayload {
     id: string;
     role: string;
 }
+
 export const verifyAuth = async (
     req: Request,
     res: Response,

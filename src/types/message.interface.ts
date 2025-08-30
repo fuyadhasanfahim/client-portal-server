@@ -1,12 +1,12 @@
-export type IDeliveryStatus =
-    | "sending"
-    | "sent"
-    | "delivered"
-    | "read"
-    | "failed";
+export type MessageKind = "user" | "system";
+export type MessageEventType =
+    | "agent_joined"
+    | "agent_assigned"
+    | "agent_left"
+    | "conversation_closed"
+    | "note";
 
-export type IAttachment = {
-    _id: string;
+export interface IAttachment {
     url: string;
     mimeType: string;
     name?: string;
@@ -16,21 +16,32 @@ export type IAttachment = {
     durationSec?: number;
     thumbnailUrl?: string;
     uploadedAt: Date;
-};
+}
 
-export type IReaction = { emoji: string; userId: string };
+export interface IReaction {
+    emoji: string;
+    userId: string;
+}
 
-export type IMessage = {
+export interface IMessage {
     _id: string;
     conversationID: string;
     authorId: string;
+    kind: MessageKind;
+    eventType?: MessageEventType;
+    eventMeta?: Map<string, string>;
+
     text?: string;
     sentAt: Date;
-    status?: IDeliveryStatus;
+    status: "sending" | "sent" | "delivered" | "read" | "failed";
+
     attachments?: IAttachment[];
     replyToId?: string;
+
     editedAt?: Date;
     deletedAt?: Date;
+
     reactions?: IReaction[];
-    readBy?: Record<string, Date>;
-};
+
+    readBy?: Map<string, Date>;
+}

@@ -11,6 +11,7 @@ import { quoteRoute } from "./quote.route.js";
 import { notificationRoute } from "./notification.route.js";
 import { MessageRoute } from "./message.routes.js";
 import { ConversationRoutes } from "./conversation.routes.js";
+import { SupportRouter } from "./support.route.js";
 
 const router = Router();
 
@@ -62,6 +63,10 @@ const moduleRoutes = [
     {
         path: "/conversations",
         route: ConversationRoutes,
+    },
+    {
+        path: "/Supports",
+        route: SupportRouter,
     },
 ];
 

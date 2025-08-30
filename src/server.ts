@@ -29,6 +29,8 @@ async function Server() {
             },
         });
 
+        app.set("io", io);
+
         registerSocketHandlers(io);
 
         server.listen(port, () => {

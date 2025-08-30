@@ -7,7 +7,7 @@ const messageSchema = new Schema<IMessage>(
         authorID: { type: String, required: true, index: true },
         authorRole: { type: String, required: true },
         text: String,
-        sentAt: { type: Date, default: new Date() },
+        sentAt: { type: Date, default: Date.now },
     },
     {
         timestamps: true,

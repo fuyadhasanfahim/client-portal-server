@@ -8,7 +8,7 @@ export type SendMessageInput = {
     conversationID: string;
     authorId: string;
     text?: string;
-    attachments?: IMessage["attachments"];
+    attachments?: IMessage[];
     replyToId?: string;
 };
 

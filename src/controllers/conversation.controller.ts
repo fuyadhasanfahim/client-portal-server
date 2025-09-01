@@ -1,25 +1,69 @@
 import { Request, Response } from "express";
-import { listUserConversations } from "../services/conversation.service.js";
+import ConversationServices from "../services/conversation.service.js";
 
-export async function getMyConversations(req: Request, res: Response) {
+async function getConversations(req: Request, res: Response) {
     try {
-        const userID = String(req.query.userID || "");
+        const { userID, search } = req.query;
+
         if (!userID) {
-            res.status(400).json({ message: "userID required" });
+            res.status(400).json({
+                success: false,
+                message: "User id is required for this request.",
+            });
             return;
         }
 
-        const limit = Number(req.query.limit) || 20;
-        const cursor =
-            typeof req.query.cursor === "string" ? req.query.cursor : undefined;
+        const conversations = await ConversationServices.getConversationsFromDB(
+            { userID: userID as string, search: search as string }
+        );
 
-        const page = await listUserConversations(userID, limit, cursor);
-        res.json({ ok: true, ...page });
+        res.status(200).json({
+            success: true,
+            conversations,
+        });
     } catch (error) {
         res.status(500).json({
             success: false,
-            message: "Failed to send invoice",
-            error: error instanceof Error ? error.message : "Unknown error",
+            message:
+                error instanceof Error
+                    ? error.message
+                    : "Something went wrong. Please try again later.",
         });
     }
 }
+
+async function getConversation(req: Request, res: Response) {
+    try {
+        const { conversationID } = req.params;
+
+        if (!conversationID) {
+            res.status(400).json({
+                success: false,
+                message: "Conversation id is required for this request.",
+            });
+            return;
+        }
+
+        const conversation =
+            await ConversationServices.getConversationFromDB(conversationID);
+
+        res.status(200).json({
+            success: true,
+            conversation,
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message:
+                error instanceof Error
+                    ? error.message
+                    : "Something went wrong. Please try again later.",
+        });
+    }
+}
+
+const ConversationControllers = {
+    getConversations,
+    getConversation,
+};
+export default ConversationControllers;

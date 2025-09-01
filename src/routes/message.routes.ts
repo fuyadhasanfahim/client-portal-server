@@ -1,7 +1,7 @@
 // routes/messages.ts
 import { Router, Request, Response } from "express";
-import ConversationModel from "../models/conversation.model";
-import MessageModel from "../models/message.model";
+import ConversationModel from "../models/conversation.model.js";
+import MessageModel from "../models/message.model.js";
 import { Types } from "mongoose";
 const router = Router();
 

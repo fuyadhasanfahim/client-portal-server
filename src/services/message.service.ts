@@ -1,115 +1,141 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { Types } from "mongoose";
-import type { IMessage } from "../types/message.interface.js";
-import ConversationModel from "../models/conversation.model.js";
-import MessageModel from "../models/message.model.js";
+// /* eslint-disable @typescript-eslint/no-explicit-any */
+// import { FilterQuery, Types } from "mongoose";
+// import type { IMessage } from "../types/message.interface.js";
+// import ConversationModel from "../models/conversation.model.js";
+// import MessageModel from "../models/message.model.js";
 
-export type SendMessageInput = {
-    conversationID: string;
-    authorId: string;
-    text?: string;
-    attachments?: IMessage[];
-    replyToId?: string;
-};
+// export type SendMessageInput = {
+//     conversationID: string;
+//     authorId: string;
+//     text?: string;
+//     attachments?: IMessage[];
+//     replyToId?: string;
+// };
 
-export type PaginatedMessages = {
-    items: IMessage[];
-    nextCursor?: string;
-    hasMore: boolean;
-};
+// export type PaginatedMessages = {
+//     items: IMessage[];
+//     nextCursor?: string;
+//     hasMore: boolean;
+// };
 
-function oid(id: string) {
-    if (!Types.ObjectId.isValid(id))
-        throw Object.assign(new Error("Invalid ObjectId"), { status: 400 });
-    return new Types.ObjectId(id);
-}
+// function oid(id: string) {
+//     if (!Types.ObjectId.isValid(id))
+//         throw Object.assign(new Error("Invalid ObjectId"), { status: 400 });
+//     return new Types.ObjectId(id);
+// }
 
-async function assertParticipant(conversationID: string, userID: string) {
-    const exists = await ConversationModel.exists({
-        _id: oid(conversationID),
-        "participants.userID": userID,
-    });
-    if (!exists)
-        throw Object.assign(
-            new Error("Not a participant of the conversation"),
-            { status: 403 }
-        );
-}
+// async function assertParticipant(conversationID: string, userID: string) {
+//     const exists = await ConversationModel.exists({
+//         _id: oid(conversationID),
+//         "participants.userID": userID,
+//     });
+//     if (!exists)
+//         throw Object.assign(
+//             new Error("Not a participant of the conversation"),
+//             { status: 403 }
+//         );
+// }
 
-export async function sendMessage(input: SendMessageInput) {
-    const { conversationID, authorId, text, attachments, replyToId } = input;
+// export async function sendMessage(input: SendMessageInput) {
+//     const { conversationID, authorId, text, attachments, replyToId } = input;
 
-    await assertParticipant(conversationID, authorId);
+//     await assertParticipant(conversationID, authorId);
 
-    const msg = await MessageModel.create({
-        conversationID,
-        authorId,
-        text,
-        attachments,
-        replyToId,
-        status: "sent",
-        sentAt: new Date(),
-    });
+//     const msg = await MessageModel.create({
+//         conversationID,
+//         authorId,
+//         text,
+//         attachments,
+//         replyToId,
+//         status: "sent",
+//         sentAt: new Date(),
+//     });
 
-    await ConversationModel.updateOne(
-        { _id: oid(conversationID) },
-        {
-            $set: {
-                lastMessageAt: msg.sentAt,
-                lastMessageText:
-                    text ?? (attachments?.length ? "[attachment]" : ""),
-                lastMessageAuthorId: authorId,
-            },
-            $inc: { unread: 1 },
-        }
-    );
+//     await ConversationModel.updateOne(
+//         { _id: oid(conversationID) },
+//         {
+//             $set: {
+//                 lastMessageAt: msg.sentAt,
+//                 lastMessageText:
+//                     text ?? (attachments?.length ? "[attachment]" : ""),
+//                 lastMessageAuthorId: authorId,
+//             },
+//             $inc: { unread: 1 },
+//         }
+//     );
 
-    return msg.toObject();
-}
+//     return msg.toObject();
+// }
 
-export async function getMessages(
-    conversationID: string,
-    limit = 20,
-    cursor?: string
-): Promise<PaginatedMessages> {
-    const exists = await ConversationModel.exists({ _id: oid(conversationID) });
-    if (!exists)
-        throw Object.assign(new Error("Conversation not found"), {
-            status: 404,
-        });
+// export async function markReadUpTo(
+//     conversationID: string,
+//     userID: string,
+//     upToMessageId: string
+// ) {
+//     await assertParticipant(conversationID, userID);
 
-    const filter: any = { conversationID };
-    if (cursor) filter._id = { $lt: oid(cursor) };
+//     const res = await MessageModel.updateMany(
+//         {
+//             conversationID,
+//             _id: { $lte: oid(upToMessageId) },
+//             [`readBy.${userID}`]: { $exists: false },
+//         },
+//         { $set: { [`readBy.${userID}`]: new Date() } }
+//     );
 
-    const docs = await MessageModel.find(filter)
-        .sort({ _id: -1 })
-        .limit(Math.max(1, Math.min(limit, 100)))
-        .lean();
+//     return { modifiedCount: res.modifiedCount };
+// }
 
-    const items = [...docs].reverse();
-    const last = docs[docs.length - 1];
-    return {
-        items,
-        hasMore: !!last,
-        nextCursor: last ? String(last._id) : undefined,
-    };
-}
+// async function getMessagesFromDB({
+//     conversationID,
+//     limit = 25,
+//     cursor,
+// }: {
+//     conversationID: string;
+//     limit: number;
+//     cursor?: string;
+// }) {
+//     const isConversationExist =
+//         await ConversationModel.findById(conversationID);
 
-export async function markReadUpTo(
-    conversationID: string,
-    userID: string,
-    upToMessageId: string
-) {
-    await assertParticipant(conversationID, userID);
+//     if (!isConversationExist) {
+//         throw new Error("No conversation found with this conversation id.");
+//     }
 
-    const res = await MessageModel.updateMany(
-        {
-            conversationID,
-            _id: { $lte: oid(upToMessageId) },
-            [`readBy.${userID}`]: { $exists: false },
-        },
-        { $set: { [`readBy.${userID}`]: new Date() } }
-    );
+//     const filter: FilterQuery<IMessage> = {
+//         conversationID,
+//     };
 
-    return { modifiedCount: res.modifiedCount };
-}
+//     if (cursor) {
+//         filter._id = {
+//             $lt: cursor,
+//         };
+//     }
+
+//     const messages = await MessageModel.find(filter)
+//         .sort({ createdAt: -1 })
+//         .limit(limit)
+//         .lean();
+
+//     return messages;
+// }
+
+// async function sendMessageInToDB({
+//     conversationID,
+//     authorID,
+//     authorRole,
+//     text,
+//     sentAt,
+// }: Partial<IMessage>) {
+//     const assertParticipant = await ConversationModel.exists({
+//         _id: conversationID,
+//         "participants.userID": authorID,
+//     });
+
+//     if (!assertParticipant) {
+//         throw new Error("Not a participant of the conversation");
+//     }
+// }   
+
+// const MessageServices = { getMessagesFromDB, sendMessageInToDB };
+// export default MessageServices;

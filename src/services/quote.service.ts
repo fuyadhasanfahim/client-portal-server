@@ -140,10 +140,16 @@ async function updateQuoteInDB({
     return updatedQuote;
 }
 
-async function deliverQuoteToClient({ quoteID }: { quoteID: string }) {
+async function deliverQuoteToClient({
+    quoteID,
+    deliveryLink,
+}: {
+    quoteID: string;
+    deliveryLink: string;
+}) {
     const quote = await QuoteModel.findOneAndUpdate(
         { quoteID },
-        { status: "delivered" },
+        { status: "delivered", deliveryLink },
         { new: true }
     );
 
@@ -158,8 +164,8 @@ async function reviewQuoteToAdmin({
     instructions: string;
 }) {
     const quote = await QuoteModel.findOneAndUpdate(
-        { quoteID },
-        { status: "in-revision" },
+        { quoteID: quoteID },
+        { status: "in-revision", "details.instructions": instructions },
         { new: true }
     );
 
@@ -196,7 +202,7 @@ async function reviewQuoteToAdmin({
                 messages: { $each: [message], $slice: -1000 },
             },
         },
-        { upsert: true, new: true, setDefaultsOnInsert: true }
+        { new: true }
     );
 
     return { quote, revision };
@@ -212,7 +218,6 @@ async function completeQuoteInDB({ quoteID }: { quoteID: string }) {
         { status: "completed" },
         { new: true }
     );
-
 
     if (quote) {
         const now = new Date();

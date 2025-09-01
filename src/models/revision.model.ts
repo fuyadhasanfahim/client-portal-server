@@ -14,7 +14,8 @@ const RevisionMessageSchema = new Schema<IRevisionMessage>(
 
 const RevisionSchema = new Schema(
     {
-        orderID: { type: String, required: true, unique: true },
+        orderID: { type: String, unique: true },
+        quoteID: { type: String, unique: true },
         messages: { type: [RevisionMessageSchema], default: [] },
         status: {
             type: String,

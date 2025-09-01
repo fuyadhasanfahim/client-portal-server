@@ -13,9 +13,9 @@ const OrderUserSchema = new Schema<IOrderUser>(
         userID: { type: String, required: true },
         name: { type: String, required: true },
         email: { type: String, required: true },
-        image: { type: String },
-        company: { type: String },
-        address: { type: String },
+        image: String,
+        company: String,
+        address: String,
     },
     { timestamps: true }
 );

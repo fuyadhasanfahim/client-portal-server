@@ -201,9 +201,10 @@ async function updateQuote(req: Request, res: Response) {
 
 async function deliverQuote(req: Request, res: Response) {
     try {
-        const { quoteID, downloadLink } = req.body;
+        const { quoteID, deliveryLink } = req.body;
+        console.log(quoteID, deliveryLink);
 
-        if (!quoteID || !downloadLink) {
+        if (!quoteID || !deliveryLink) {
             res.status(400).json({
                 success: false,
                 message:
@@ -212,7 +213,10 @@ async function deliverQuote(req: Request, res: Response) {
             return;
         }
 
-        const quote = await QuoteServices.deliverQuoteToClient({ quoteID });
+        const quote = await QuoteServices.deliverQuoteToClient({
+            quoteID,
+            deliveryLink,
+        });
 
         if (!quote) {
             res.status(404).json({

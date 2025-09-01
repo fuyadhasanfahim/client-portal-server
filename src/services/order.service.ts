@@ -41,7 +41,7 @@ async function newOrderInDB({
                     userID,
                     name: user.name,
                     email: user.email,
-                    image: user.image,
+                    image: user.image ?? "",
                     company: user.company,
                     address: user.address,
                 },

@@ -1,7 +1,7 @@
 import { Request, Response, Router } from "express";
-import ConversationModel from "../models/conversation.model";
-import UserModel from "../models/user.model";
-import MessageModel from "../models/message.model";
+import ConversationModel from "../models/conversation.model.js";
+import UserModel from "../models/user.model.js";
+import MessageModel from "../models/message.model.js";
 
 const router = Router();
 

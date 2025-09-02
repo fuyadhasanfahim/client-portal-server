@@ -12,43 +12,47 @@ async function newOrderCheckoutInDB(
     paymentOption: string,
     paymentMethod: string
 ) {
-    const order = await OrderModel.findOne({
-        orderID,
-    });
-
-    if (!order) {
-        throw new Error("Order not found with this id.");
-    }
-
-    const orderSessionId = `PAYMENT-${nanoid(10)}`;
-
-    const session = await stripe.checkout.sessions.create({
-        mode: "payment",
-        ui_mode: "embedded",
-        payment_method_types: ["card"],
-        line_items: [
-            {
-                price_data: {
-                    currency: "usd",
-                    product_data: {
-                        name: `Order #${orderID}`,
-                    },
-                    unit_amount: Math.round((order.total ?? 0) * 100),
-                },
-                quantity: 1,
-            },
-        ],
-        return_url: `${envConfig.frontend_url!}/orders/order-payment/complete?session_id={CHECKOUT_SESSION_ID}`,
-        metadata: {
+    try {
+        const order = await OrderModel.findOne({
             orderID,
-            userID: order.user.userID,
-            orderSessionId,
-            paymentOption,
-            paymentMethod,
-        },
-    });
+        });
 
-    return session.client_secret;
+        if (!order) {
+            throw new Error("Order not found with this id.");
+        }
+
+        const orderSessionId = `PAYMENT-${nanoid(10)}`;
+
+        const session = await stripe.checkout.sessions.create({
+            mode: "payment",
+            ui_mode: "embedded",
+            payment_method_types: ["card"],
+            line_items: [
+                {
+                    price_data: {
+                        currency: "usd",
+                        product_data: {
+                            name: `Order #${orderID}`,
+                        },
+                        unit_amount: Math.round((order.total ?? 0) * 100),
+                    },
+                    quantity: 1,
+                },
+            ],
+            return_url: `${envConfig.frontend_url!}/orders/order-payment/complete?session_id={CHECKOUT_SESSION_ID}`,
+            metadata: {
+                orderID,
+                userID: order.user.userID,
+                orderSessionId,
+                paymentOption,
+                paymentMethod,
+            },
+        });
+
+        return session.client_secret;
+    } catch (error) {
+        console.log(error);
+    }
 }
 
 async function constructStripeEvent(
@@ -60,57 +64,63 @@ async function constructStripeEvent(
 }
 
 async function paymentWebhookInDB(session: Stripe.Checkout.Session) {
-    const metadata = session.metadata;
+    try {
+        const metadata = session.metadata;
 
-    if (!metadata?.orderID || !metadata?.userID) {
-        throw new Error("Missing metadata in session.");
-    }
-
-    const { orderID, userID, paymentOption, paymentMethod } = metadata;
-
-    const existingPayment = await PaymentModel.findOne({ orderID });
-
-    const paymentData = {
-        userID,
-        orderID,
-        paymentOption,
-        paymentMethod,
-        customerID: session.customer?.toString(),
-        amount: (session.amount_subtotal ?? 0) / 100,
-        tax: (session.total_details?.amount_tax ?? 0) / 100,
-        totalAmount: (session.amount_total ?? 0) / 100,
-        currency: session.currency,
-        status: session.payment_status as
-            | "pending"
-            | "succeeded"
-            | "failed"
-            | "refunded",
-        paymentIntentID: session.payment_intent?.toString(),
-    };
-
-    if (existingPayment) {
-        await PaymentModel.updateOne({ _id: existingPayment._id }, paymentData);
-    } else {
-        await PaymentModel.create(paymentData);
-    }
-
-    await OrderModel.findOneAndUpdate(
-        { orderID },
-        {
-            paymentStatus: "paid",
-            orderStage: "payment-completed",
-            paymentID: session.payment_intent?.toString(),
+        if (!metadata?.orderID || !metadata?.userID) {
+            throw new Error("Missing metadata in session.");
         }
-    );
 
-    const user = await UserModel.findOne({ userID });
+        const { orderID, userID, paymentOption, paymentMethod } = metadata;
 
-    if (user?.email) {
-        await sendEmail({
-            from: process.env.EMAIL_USER!,
-            to: user.email,
-            subject: `✅ Payment Completed - Order #${orderID}`,
-            html: `<div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 16px; color: #333; line-height: 1.6;">
+        const existingPayment = await PaymentModel.findOne({ orderID });
+
+        const paymentData = {
+            paymentID: session.metadata?.orderSessionId,
+            checkoutSessionID: session.id,
+            userID,
+            orderID,
+            paymentOption,
+            paymentMethod,
+            customerID: session.customer?.toString(),
+            amount: (session.amount_subtotal ?? 0) / 100,
+            tax: (session.total_details?.amount_tax ?? 0) / 100,
+            totalAmount: (session.amount_total ?? 0) / 100,
+            currency: session.currency,
+            status: session.payment_status as
+                | "pending"
+                | "succeeded"
+                | "failed"
+                | "refunded",
+            paymentIntentID: session.payment_intent?.toString(),
+        };
+
+        if (existingPayment) {
+            await PaymentModel.updateOne(
+                { _id: existingPayment._id },
+                paymentData
+            );
+        } else {
+            await PaymentModel.create(paymentData);
+        }
+
+        await OrderModel.findOneAndUpdate(
+            { orderID },
+            {
+                paymentStatus: "paid",
+                orderStage: "payment-completed",
+                paymentID: session.payment_intent?.toString(),
+            }
+        );
+
+        const user = await UserModel.findOne({ userID });
+
+        if (user?.email) {
+            await sendEmail({
+                from: process.env.EMAIL_USER!,
+                to: user.email,
+                subject: `✅ Payment Completed - Order #${orderID}`,
+                html: `<div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 16px; color: #333; line-height: 1.6;">
             <div style="max-width: 600px; margin: auto; border: 1px solid #e0e0e0; border-radius: 8px; padding: 24px;">
                 <h2 style="color: #0f9d58; margin-bottom: 12px;">🎉 Payment Confirmed!</h2>
 
@@ -130,7 +140,10 @@ async function paymentWebhookInDB(session: Stripe.Checkout.Session) {
                 <p style="margin-top: 30px;">Best regards,<br /><strong>The Project Pixel Forge Team</strong></p>
             </div>
         </div>`,
-        });
+            });
+        }
+    } catch (error) {
+        console.log(error);
     }
 }
 

@@ -3,9 +3,10 @@ import { IPayment } from "../types/payment.interface.js";
 
 const paymentSchema = new Schema<IPayment>(
     {
-        paymentID: { type: String, required: true, unique: true },
+        paymentID: { type: String, required: true, unique: true, index: true },
+        checkoutSessionID: { type: String, index: true },
         userID: { type: String, required: true },
-        orderID: { type: String, required: true },
+        orderID: { type: String, required: true, index: true },
         paymentOption: { type: String, required: true },
         paymentMethod: { type: String },
         paymentIntentID: { type: String },
@@ -22,6 +23,11 @@ const paymentSchema = new Schema<IPayment>(
         },
     },
     { timestamps: true }
+);
+
+paymentSchema.index(
+    { orderID: 1, status: 1 },
+    { unique: true, partialFilterExpression: { status: "pending" } }
 );
 
 export const PaymentModel = model<IPayment>("Payment", paymentSchema);

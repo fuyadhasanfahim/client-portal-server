@@ -1,7 +1,8 @@
 {
     "compilerOptions": {
         "module": "esnext",
-        "target": "es2020",
+        "target": "ES2021",
+        "lib": ["ES2021"],
         "rootDir": "./src",
         "outDir": "./dist",
         "esModuleInterop": true,

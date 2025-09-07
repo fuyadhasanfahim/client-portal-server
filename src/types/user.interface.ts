@@ -1,6 +1,12 @@
 export type UserRole = "user" | "admin";
 export type AuthProvider = "credentials" | "google";
 
+export type ITeamPermissions = {
+    viewPrices?: boolean;
+    createOrders?: boolean;
+    exportInvoices?: boolean;
+};
+
 export interface IUser {
     userID: string;
     name: string;
@@ -17,12 +23,17 @@ export interface IUser {
     password: string;
     oldPasswords?: string[];
 
-    isExistingUser: boolean;
+    isExistingUser?: boolean;
+    isTeamMember?: boolean;
     services?: {
         _id: string;
         name: string;
         price: number;
     }[];
+
+    ownerUserID?: string;
+    teamPermissions?: ITeamPermissions;
+    currency?: string;
 
     isEmailVerified: boolean;
     emailVerificationToken?: string;
@@ -53,12 +64,16 @@ export interface ISanitizedUser {
     company?: string;
     role: UserRole;
     isEmailVerified: boolean;
-    isExistingUser: boolean;
+    isExistingUser?: boolean;
+    isTeamMember?: boolean;
     services?: {
         _id: string;
         name: string;
         price: number;
     }[];
+    ownerUserID?: string;
+    teamPermissions?: ITeamPermissions;
+    currency?: string;
     lastLogin: Date;
     image?: string;
     provider: string;

@@ -1,37 +1,30 @@
-// emailTemplate.node.ts
 export interface EmailTemplateProps {
     emailTitle: string;
     userName: string;
-    emailMessage: string; // can be HTML if you allow it (see options below)
+    emailMessage: string;
     userEmail: string;
 
-    // Optional sections
     orderTitle?: string;
     orderMessage?: string;
 
-    // Info section
     infoItems?: Array<{ label: string; value: string }>;
 
-    // Status
     status?: {
         text: string;
         type: "success" | "warning" | "info";
     };
 
-    // Buttons
     primaryButton?: { text: string; url: string };
     secondaryButton?: { text: string; url: string };
 
-    // Footer
     footerMessage?: string;
 
     supportEmail?: string;
     privacyUrl?: string;
 
-    /** Optional: control HTML escaping for message fields */
     options?: {
-        allowHtmlInEmailMessage?: boolean; // default false
-        allowHtmlInFooterMessage?: boolean; // default false
+        allowHtmlInEmailMessage?: boolean;
+        allowHtmlInFooterMessage?: boolean;
     };
 }
 
@@ -174,7 +167,7 @@ export const renderEmailTemplateNode = (props: EmailTemplateProps): string => {
     .email-wrapper { margin:0 10px; border-radius:8px; }
     .header,.content,.footer { padding:25px 20px; }
     .header-title { font-size:20px; }
-    .logo-image { max-height:35px; }
+    .logo-image { max-height:40px; }
     .greeting { font-size:16px; }
     .message { font-size:15px; }
     .cta-button { padding:14px 24px; font-size:15px; display:block; margin:20px 0; }

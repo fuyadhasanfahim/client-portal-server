@@ -257,6 +257,84 @@ async function getClients(req: Request, res: Response) {
     }
 }
 
+async function getTeamMembers(req: Request, res: Response) {
+    try {
+        const {
+            search = "",
+            page = 1,
+            limit = 10,
+            sortBy = "createdAt",
+            sortOrder = "desc",
+            userID,
+        } = req.query;
+
+        if (!userID) {
+            res.status(400).json({
+                success: false,
+                message: "User ID is required.",
+            });
+            return;
+        }
+
+        const teamMembers = await UserServices.getTeamMembersFromDB({
+            userID: userID as string,
+            search: search as string,
+            page: parseFloat(page as string),
+            limit: parseFloat(limit as string),
+            sortBy: sortBy as string,
+            sortOrder: sortOrder as "asc" | "desc",
+        });
+
+        res.status(200).json({
+            success: true,
+            data: teamMembers,
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "An error occurred while processing your request",
+            error:
+                error instanceof Error
+                    ? error.message
+                    : "Something went wrong! Please try again later.",
+        });
+    }
+}
+
+async function updateTeamMemberInfo(req: Request, res: Response) {
+    try {
+        const { id } = req.params;
+        const data = req.body;
+
+        if (!id) {
+            res.status(400).json({
+                success: false,
+                message: "User ID is required.",
+            });
+            return;
+        }
+
+        await UserServices.updateTeamMemberInfoInDB({
+            id,
+            data,
+        });
+
+        res.status(200).json({
+            success: true,
+            message: "Update successfully.",
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "An error occurred while processing your request",
+            error:
+                error instanceof Error
+                    ? error.message
+                    : "Something went wrong! Please try again later.",
+        });
+    }
+}
+
 const UserControllers = {
     getMe,
     getUserInfo,
@@ -265,6 +343,8 @@ const UserControllers = {
     uploadAvatar,
     getUsers,
     getClients,
+    getTeamMembers,
+    updateTeamMemberInfo,
 };
 
 export default UserControllers;

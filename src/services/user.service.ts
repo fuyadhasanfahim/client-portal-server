@@ -219,6 +219,89 @@ async function getClientsFromDB({
     };
 }
 
+async function getTeamMembersFromDB({
+    userID,
+    search = "",
+    page = 1,
+    limit = 10,
+    sortBy = "createdAt",
+    sortOrder = "desc",
+}: {
+    userID: string;
+    search?: string;
+    page?: number;
+    limit?: number;
+    sortBy?: string;
+    sortOrder?: "asc" | "desc";
+}) {
+    // Ensure user exists
+    const user = await UserModel.findOne({ userID });
+    if (!user) throw new Error("User not found.");
+
+    const query: any = {
+        ownerUserID: userID,
+    };
+
+    // Add search filter
+    if (search) {
+        query.$and = [
+            query,
+            {
+                $or: [
+                    { name: { $regex: search, $options: "i" } },
+                    { email: { $regex: search, $options: "i" } },
+                    { userID: { $regex: search, $options: "i" } },
+                ],
+            },
+        ];
+    }
+
+    // Sorting
+    const sort: any = {
+        [sortBy]: sortOrder === "asc" ? 1 : -1,
+    };
+
+    const skip = (page - 1) * limit;
+
+    const [teamMembers, total] = await Promise.all([
+        UserModel.find(query).sort(sort).skip(skip).limit(limit),
+        UserModel.countDocuments(query),
+    ]);
+
+    const sanitizedTeamMembers = await Promise.all(
+        teamMembers.map((member) => getSanitizeUserData(member))
+    );
+
+    return {
+        clients: sanitizedTeamMembers,
+        total,
+        page,
+        totalPages: Math.ceil(total / limit),
+    };
+}
+
+async function updateTeamMemberInfoInDB({
+    id,
+    data,
+}: {
+    id: string;
+    data: any;
+}) {
+    const user = await UserModel.findOne({ id });
+
+    if (!user) throw new Error("User not found.");
+
+    const updateInfo = UserModel.findOneAndUpdate(
+        {
+            userID: user.userID,
+        },
+        data,
+        { new: true }
+    );
+
+    return updateInfo;
+}
+
 const UserServices = {
     getMeFromDB,
     getUserInfoFromDB,
@@ -227,6 +310,8 @@ const UserServices = {
     uploadAvatarInDB,
     getUsersFromDB,
     getClientsFromDB,
+    getTeamMembersFromDB,
+    updateTeamMemberInfoInDB,
 };
 
 export default UserServices;

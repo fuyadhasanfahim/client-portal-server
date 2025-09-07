@@ -12,6 +12,8 @@ import { notificationRoute } from "./notification.route.js";
 import { MessageRoute } from "./message.routes.js";
 import { ConversationRoutes } from "./conversation.routes.js";
 import { SupportRouter } from "./support.route.js";
+import { teamMemberRoute } from "./team-member.route.js";
+import { clientRouter } from "./client.route.js";
 
 const router = Router();
 
@@ -67,6 +69,14 @@ const moduleRoutes = [
     {
         path: "/Supports",
         route: SupportRouter,
+    },
+    {
+        path: "/team-member",
+        route: teamMemberRoute,
+    },
+    {
+        path: "/client",
+        route: clientRouter,
     },
 ];
 

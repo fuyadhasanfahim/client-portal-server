@@ -20,6 +20,10 @@ export default async function getSanitizeUserData(
         provider,
         isExistingUser,
         services,
+        ownerUserID,
+        teamPermissions,
+        currency,
+        isTeamMember,
     } = user;
 
     return {
@@ -39,5 +43,9 @@ export default async function getSanitizeUserData(
         createdAt,
         provider,
         services,
+        ownerUserID,
+        teamPermissions,
+        currency,
+        isTeamMember,
     };
 }

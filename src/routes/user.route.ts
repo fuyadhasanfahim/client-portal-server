@@ -15,5 +15,10 @@ router.put(
 );
 router.get("/get-users", UserControllers.getUsers);
 router.get("/get-clients", UserControllers.getClients);
+router.get("/get-team-members", UserControllers.getTeamMembers);
+router.put(
+    "/update-team-member-info/:id",
+    UserControllers.updateTeamMemberInfo
+);
 
 export const userRoute = router;

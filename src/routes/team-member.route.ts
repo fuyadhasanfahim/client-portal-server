@@ -1,8 +1,8 @@
 import { Router, Request, Response } from "express";
 import { z } from "zod";
-import UserModel from "../models/user.model";
-import { sendEmail } from "../lib/nodemailer";
-import { renderEmailTemplateNode } from "../lib/emailTemplate";
+import UserModel from "../models/user.model.js";
+import { sendEmail } from "../lib/nodemailer.js";
+import { renderEmailTemplateNode } from "../lib/emailTemplate.js";
 
 const router = Router();
 

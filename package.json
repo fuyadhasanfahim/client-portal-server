@@ -5,7 +5,7 @@
     "main": "dist/server.js",
     "scripts": {
         "dev": "nodemon --exec tsx src/server.ts",
-        "start": "nodemon dist/server.js",
+        "start": "node dist/server.js",
         "start-heroku": "npm run build && npm run start",
         "build": "tsc",
         "build:dev": "npx tsc -w",

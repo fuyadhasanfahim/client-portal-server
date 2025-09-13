@@ -186,7 +186,10 @@ async function getClientsFromDB({
         throw new Error("User not found.");
     }
 
-    const query: any = {};
+    const query: any = {
+        role: "user",
+        isTeamMember: false,
+    };
 
     if (search) {
         query.$or = [

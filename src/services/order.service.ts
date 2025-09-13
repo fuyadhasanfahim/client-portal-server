@@ -18,6 +18,7 @@ async function newOrderInDB({
     details,
     total,
     payment,
+    paymentStatus,
 }: {
     orderStage: string;
     userID?: string;
@@ -26,6 +27,7 @@ async function newOrderInDB({
     details?: IOrderDetails;
     total?: number;
     payment?: IPayment;
+    paymentStatus?: string;
 }) {
     try {
         const user = await UserModel.findOne({ userID });
@@ -75,7 +77,10 @@ async function newOrderInDB({
             );
         }
 
+        // Handle regular payment completion (with Stripe/payment gateway)
         if (orderStage === "payment-completed" && orderID && payment) {
+            console.log("ordering as clients client...");
+
             order = await OrderModel.findOneAndUpdate(
                 { orderID },
                 {
@@ -88,6 +93,25 @@ async function newOrderInDB({
                         payment.status === "succeeded"
                             ? "in-progress"
                             : "pending",
+                    orderStage,
+                },
+                { new: true }
+            );
+        }
+
+        // Handle pay-later case (team members without view prices permission)
+        if (
+            orderStage === "payment-completed" &&
+            orderID &&
+            paymentStatus === "pay-later"
+        ) {
+            order = await OrderModel.findOneAndUpdate(
+                { orderID },
+                {
+                    details,
+                    total,
+                    paymentStatus,
+                    status: "pending",
                     orderStage,
                 },
                 { new: true }

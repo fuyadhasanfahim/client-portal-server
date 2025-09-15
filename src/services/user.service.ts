@@ -1,18 +1,30 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import cloudinary from "../lib/cloudinary.js";
+import ConversationModel from "../models/conversation.model.js";
 import UserModel from "../models/user.model.js";
 import { ISanitizedUser, IUser } from "../types/user.interface.js";
 import getSanitizeUserData from "../utils/getSanitizeUserData.js";
 import bcrypt from "bcryptjs";
 
 async function getMeFromDB(userID: string) {
-    const user = (await UserModel.findOne({
-        userID,
-    })) as IUser;
+    const user = await UserModel.findOne({ userID });
 
-    const sanitizeUser = await getSanitizeUserData(user);
+    if (!user) {
+        throw new Error(`User with ID ${userID} not found.`);
+    }
 
-    return sanitizeUser;
+    const conversation = await ConversationModel.findOne({
+        participants: { $elemMatch: { userID: userID } },
+    });
+
+    const dataToSanitize = {
+        ...user.toObject(),
+        conversationID: conversation?._id,
+    };
+
+    const sanitizedData = await getSanitizeUserData(dataToSanitize);
+
+    return sanitizedData;
 }
 
 async function getUserInfoFromDB(userID: string) {

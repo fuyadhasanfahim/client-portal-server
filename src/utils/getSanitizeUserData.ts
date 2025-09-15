@@ -24,6 +24,9 @@ export default async function getSanitizeUserData(
         teamPermissions,
         currency,
         isTeamMember,
+        conversationID,
+        lastSeenAt,
+        isOnline,
     } = user;
 
     return {
@@ -47,5 +50,8 @@ export default async function getSanitizeUserData(
         teamPermissions,
         currency,
         isTeamMember,
+        conversationID,
+        lastSeenAt,
+        isOnline,
     };
 }

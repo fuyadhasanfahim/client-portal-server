@@ -1,141 +1,126 @@
-// /* eslint-disable @typescript-eslint/no-explicit-any */
-// import { FilterQuery, Types } from "mongoose";
-// import type { IMessage } from "../types/message.interface.js";
-// import ConversationModel from "../models/conversation.model.js";
-// import MessageModel from "../models/message.model.js";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { Types } from "mongoose";
+import UserModel from "../models/user.model.js";
+import MessageModel from "../models/message.model.js";
+import ConversationModel from "../models/conversation.model.js";
 
-// export type SendMessageInput = {
-//     conversationID: string;
-//     authorId: string;
-//     text?: string;
-//     attachments?: IMessage[];
-//     replyToId?: string;
-// };
+async function getMessagesFromDB({
+    userID,
+    conversationID,
+    rawLimit,
+    cursor,
+}: {
+    userID: string;
+    conversationID: string;
+    rawLimit: number;
+    cursor: string;
+}) {
+    const user = await UserModel.findOne({
+        userID,
+    }).lean();
 
-// export type PaginatedMessages = {
-//     items: IMessage[];
-//     nextCursor?: string;
-//     hasMore: boolean;
-// };
+    if (!user) {
+        throw new Error("No user found.");
+    }
 
-// function oid(id: string) {
-//     if (!Types.ObjectId.isValid(id))
-//         throw Object.assign(new Error("Invalid ObjectId"), { status: 400 });
-//     return new Types.ObjectId(id);
-// }
+    const limit = Number.isFinite(rawLimit)
+        ? Math.min(Math.max(Number(rawLimit), 1), 100)
+        : 50;
 
-// async function assertParticipant(conversationID: string, userID: string) {
-//     const exists = await ConversationModel.exists({
-//         _id: oid(conversationID),
-//         "participants.userID": userID,
-//     });
-//     if (!exists)
-//         throw Object.assign(
-//             new Error("Not a participant of the conversation"),
-//             { status: 403 }
-//         );
-// }
+    const conversation =
+        await ConversationModel.findById(conversationID).lean();
 
-// export async function sendMessage(input: SendMessageInput) {
-//     const { conversationID, authorId, text, attachments, replyToId } = input;
+    if (!conversation) {
+        throw new Error("No conversation found.");
+    }
 
-//     await assertParticipant(conversationID, authorId);
+    const participant = conversation.participants.some(
+        (p) => p.userID === userID
+    );
 
-//     const msg = await MessageModel.create({
-//         conversationID,
-//         authorId,
-//         text,
-//         attachments,
-//         replyToId,
-//         status: "sent",
-//         sentAt: new Date(),
-//     });
+    if (user.role !== "admin" && !participant) {
+        throw new Error("Access forbidden.");
+    }
 
-//     await ConversationModel.updateOne(
-//         { _id: oid(conversationID) },
-//         {
-//             $set: {
-//                 lastMessageAt: msg.sentAt,
-//                 lastMessageText:
-//                     text ?? (attachments?.length ? "[attachment]" : ""),
-//                 lastMessageAuthorId: authorId,
-//             },
-//             $inc: { unread: 1 },
-//         }
-//     );
+    const find: any = { conversationID: String(conversationID) };
 
-//     return msg.toObject();
-// }
+    if (cursor) {
+        if (!Types.ObjectId.isValid(cursor as string)) {
+            throw new Error("Invalid cursor.");
+        }
+        find._id = { $gt: new Types.ObjectId(cursor as string) };
+    }
 
-// export async function markReadUpTo(
-//     conversationID: string,
-//     userID: string,
-//     upToMessageId: string
-// ) {
-//     await assertParticipant(conversationID, userID);
+    const docs = await MessageModel.find(find)
+        .sort({ sentAt: 1, _id: 1 })
+        .limit(limit + 1)
+        .lean();
 
-//     const res = await MessageModel.updateMany(
-//         {
-//             conversationID,
-//             _id: { $lte: oid(upToMessageId) },
-//             [`readBy.${userID}`]: { $exists: false },
-//         },
-//         { $set: { [`readBy.${userID}`]: new Date() } }
-//     );
+    const hasMore = docs.length > limit;
+    const messages = hasMore ? docs.slice(0, -1) : docs;
+    const nextCursor = hasMore
+        ? String(messages[messages.length - 1]._id)
+        : null;
 
-//     return { modifiedCount: res.modifiedCount };
-// }
+    return {
+        messages,
+        nextCursor,
+    };
+}
 
-// async function getMessagesFromDB({
-//     conversationID,
-//     limit = 25,
-//     cursor,
-// }: {
-//     conversationID: string;
-//     limit: number;
-//     cursor?: string;
-// }) {
-//     const isConversationExist =
-//         await ConversationModel.findById(conversationID);
+async function newMessageInDB({
+    conversationID,
+    text,
+    senderID,
+}: {
+    conversationID: string;
+    text: string;
+    senderID: string;
+}) {
+    const sender = await UserModel.findOne({
+        userID: senderID,
+    }).lean();
 
-//     if (!isConversationExist) {
-//         throw new Error("No conversation found with this conversation id.");
-//     }
+    if (!sender) {
+        throw new Error("No sender found!");
+    }
 
-//     const filter: FilterQuery<IMessage> = {
-//         conversationID,
-//     };
+    const conversation = await ConversationModel.findById(conversationID);
 
-//     if (cursor) {
-//         filter._id = {
-//             $lt: cursor,
-//         };
-//     }
+    if (!conversation) {
+        throw new Error("No conversations found!");
+    }
 
-//     const messages = await MessageModel.find(filter)
-//         .sort({ createdAt: -1 })
-//         .limit(limit)
-//         .lean();
+    const isParticipant = conversation.participants.some(
+        (p) => p.userID === senderID
+    );
 
-//     return messages;
-// }
+    if (sender.role !== "admin" && !isParticipant) {
+        throw new Error("Access forbidden.");
+    }
 
-// async function sendMessageInToDB({
-//     conversationID,
-//     authorID,
-//     authorRole,
-//     text,
-//     sentAt,
-// }: Partial<IMessage>) {
-//     const assertParticipant = await ConversationModel.exists({
-//         _id: conversationID,
-//         "participants.userID": authorID,
-//     });
+    const now = new Date();
 
-//     if (!assertParticipant) {
-//         throw new Error("Not a participant of the conversation");
-//     }
-// }   
+    const message = await MessageModel.create({
+        conversationID: String(conversationID),
+        authorID: senderID,
+        authorRole: sender.role,
+        text: text.trim(),
+        sentAt: now,
+    });
 
-// const MessageServices = { getMessagesFromDB, sendMessageInToDB };
-// export default MessageServices;
+    conversation.lastMessageAt = now;
+    conversation.lastMessageText = message.text;
+    conversation.lastMessageAuthorID = senderID;
+    await conversation.save();
+
+    await UserModel.updateOne(
+        { userID: senderID },
+        { $set: { lastSeenAt: now, isOnline: true } }
+    );
+
+    return message;
+}
+
+const MessageServices = { getMessagesFromDB, newMessageInDB };
+export default MessageServices;

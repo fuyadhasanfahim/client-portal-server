@@ -1,66 +1,78 @@
-// import { Request, Response } from "express";
-// import { io } from "../server.js";
-// import {
-//     getMessages,
-//     markReadUpTo,
-//     sendMessage,
-// } from "../services/message.service.js";
+import { Request, Response } from "express";
+import MessageServices from "../services/message.service";
+import { io } from "../server";
 
-// export async function postSendMessage(req: Request, res: Response) {
-//     const { conversationID, authorId, text, attachments, replyToId } =
-//         req.body ?? {};
-//     if (!conversationID || !authorId || (!text && !attachments?.length)) {
-//         res.status(400).json({
-//             message:
-//                 "conversationID & authorId & (text or attachments) are required",
-//         });
-//         return;
-//     }
+async function getMessages(req: Request, res: Response) {
+    try {
+        const { userID, conversationID, rawLimit, cursor } = req.query;
 
-//     const msg = await sendMessage({
-//         conversationID,
-//         authorId,
-//         text,
-//         attachments,
-//         replyToId,
-//     });
+        if (!userID) {
+            res.status(401).json({
+                success: false,
+                message: "Unauthenticated! Access denied.",
+            });
+            return;
+        }
 
-//     io?.to(`conversation:${conversationID}`).emit("message:new", msg);
+        if (!conversationID) {
+            res.status(400).json({
+                success: false,
+                message: "Conversation id not found.",
+            });
+            return;
+        }
 
-//     res.status(201).json({ ok: true, message: msg });
-// }
+        const data = await MessageServices.getMessagesFromDB({
+            userID: userID as string,
+            conversationID: conversationID as string,
+            rawLimit: Number(rawLimit),
+            cursor: cursor as string,
+        });
 
-// export async function getMessagesPage(req: Request, res: Response) {
-//     const { conversationID } = req.query as { conversationID?: string };
-//     if (!conversationID) {
-//         res.status(400).json({ message: "conversationID is required" });
-//         return;
-//     }
+        res.status(200).json({
+            success: true,
+            data,
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error instanceof Error && error.message,
+        });
+    }
+}
 
-//     const limit = Number(req.query.limit) || 20;
-//     const cursor =
-//         typeof req.query.cursor === "string" ? req.query.cursor : undefined;
+async function newMessage(req: Request, res: Response) {
+    try {
+        const { conversationID, text, senderID } = req.body;
 
-//     const page = await getMessages(conversationID, limit, cursor);
-//     res.json({ ok: true, ...page });
-// }
+        if (!senderID || !conversationID) {
+            res.status(400).json({
+                success: false,
+                message: "Something is missing in the body.",
+            });
+            return;
+        }
+        if (!text?.trim()) {
+            res.status(400).json({ success: false, message: "text required" });
+            return;
+        }
 
-// export async function postMarkRead(req: Request, res: Response) {
-//     const { conversationID } = req.params;
-//     const { userID, upToMessageId } = req.body ?? {};
-//     if (!userID || !upToMessageId) {
-//         res.status(400).json({
-//             message: "userID and upToMessageId are required",
-//         });
-//         return;
-//     }
+        const message = await MessageServices.newMessageInDB({
+            conversationID,
+            text,
+            senderID,
+        });
 
-//     const result = await markReadUpTo(conversationID, userID, upToMessageId);
+        io.to(conversationID).emit("new-message", message);
 
-//     io?.to(`conversation:${conversationID}`).emit("message:read", {
-//         userID,
-//         upToMessageId,
-//     });
+        res.status(201).json({ success: true, message });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error instanceof Error && error.message,
+        });
+    }
+}
 
-//     res.json({ ok: true, ...result });
-// }
+const MessageControllers = { getMessages, newMessage };
+export default MessageControllers;

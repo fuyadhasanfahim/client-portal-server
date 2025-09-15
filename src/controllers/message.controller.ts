@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
-import MessageServices from "../services/message.service";
-import { io } from "../server";
+import MessageServices from "../services/message.service.js";
+import { io } from "../server.js";
 
 async function getMessages(req: Request, res: Response) {
     try {

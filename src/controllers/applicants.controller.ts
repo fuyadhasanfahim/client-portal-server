@@ -119,6 +119,8 @@ export async function updateApplicant(req: Request, res: Response) {
             userName: response.firstName || "Applicant",
             userEmail: response.email,
             viewUrl: `https://webbriks.com/job/applicants/${id}`,
+            date: data.date, // e.g. "2025-09-25"
+            time: data.time, // e.g. "10:00 AM"
         });
 
         await sendEmail({

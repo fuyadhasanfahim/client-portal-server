@@ -347,27 +347,53 @@ export function buildApplicantStatusEmail(opts: {
     userName: string;
     userEmail: string;
     viewUrl?: string;
+    date?: string; // e.g. "2025-09-20"
+    time?: string; // e.g. "10:30 AM"
 }): { subject: string; html: string } {
     const subject = APPLICANT_SUBJECT[opts.status]();
 
-    // dynamic message per status
-    const message =
-        opts.status === "applied"
-            ? "We have received your application. Our team will review it and get back to you soon."
-            : opts.status === "shortlisted"
-              ? "Congratulations! You have been shortlisted. Our team will reach out with the next steps."
-              : opts.status === "interview"
-                ? "You have been selected for the interview stage. Please keep an eye on your inbox for scheduling details."
-                : opts.status === "hired"
-                  ? "We are delighted to inform you that you have been selected for the role. Our HR team will contact you with onboarding details."
-                  : "We appreciate the time and effort you put into your application. Unfortunately, you were not selected at this time, but we encourage you to apply for future opportunities.";
+    // Default dynamic message
+    let message: string;
+
+    if (opts.status === "applied") {
+        message =
+            "We have received your application. Our team will review it and get back to you soon.";
+    } else if (opts.status === "shortlisted") {
+        message =
+            "Congratulations! You have been shortlisted. Our team will reach out with the next steps.";
+    } else if (opts.status === "interview") {
+        // Custom Interview message
+        message = `
+            Hello ${opts.userName},<br/><br/>
+            Greetings from <b>Web Briks LLC</b>. Here are your interview details:<br/><br/>
+
+            <b>Date:</b> ${opts.date ?? "To be scheduled"}<br/>
+            <b>Time:</b> ${opts.time ?? "To be scheduled"}<br/>
+            <b>Address:</b> Level 14, Sheltech Rubynur, 121 Begum Rokeya Ave, Mirpur - 10, Dhaka.<br/>
+            <b>Google Map:</b> <a href="https://maps.app.goo.gl/Bg4fwN1ucemxdVoF9">View Location</a><br/><br/>
+
+            <b>Note:</b> Please bring your hard copy CV.<br/><br/>
+
+            Regards,<br/>
+            Human Resource Division
+        `;
+    } else if (opts.status === "hired") {
+        message =
+            "We are delighted to inform you that you have been selected for the role. Our HR team will contact you with onboarding details.";
+    } else {
+        message =
+            "We appreciate the time and effort you put into your application. Unfortunately, you were not selected at this time, but we encourage you to apply for future opportunities.";
+    }
 
     const html = renderEmailTemplateNode({
         emailTitle: subject,
         userName: opts.userName,
         userEmail: opts.userEmail,
         emailMessage: message,
-        orderTitle: "Application Status",
+        orderTitle:
+            opts.status === "interview"
+                ? "Interview Invitation"
+                : "Application Status",
         orderMessage: `Current status: ${applicantLabel(opts.status)}`,
         status: {
             text: applicantLabel(opts.status),
@@ -376,6 +402,7 @@ export function buildApplicantStatusEmail(opts: {
         primaryButton: opts.viewUrl
             ? { text: "View Application", url: opts.viewUrl }
             : undefined,
+        options: { allowHtmlInEmailMessage: true },
     });
 
     return { subject, html };

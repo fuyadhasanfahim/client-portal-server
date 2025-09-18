@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import ApplicantModel from "../models/applicant.model.js";
+import IApplicant from "../types/applicant.interface.js";
 
 interface getApplicantsProps {
     search?: string;
@@ -40,14 +41,43 @@ export async function getApplicantsFromDB({
 
     const skip = (page - 1) * limit;
 
-    const [applicants, totalApplicants] = await Promise.all([
-        await ApplicantModel.find(query)
-            .sort(sortBy)
-            .skip(skip)
-            .limit(limit)
-            .lean(),
-        ApplicantModel.countDocuments(query),
+    const result = await ApplicantModel.aggregate([
+        { $match: query },
+        {
+            $facet: {
+                data: [
+                    { $sort: sortBy },
+                    { $skip: skip },
+                    { $limit: limit },
+                    {
+                        $lookup: {
+                            from: "jobs",
+                            localField: "jobId",
+                            foreignField: "_id",
+                            as: "job",
+                        },
+                    },
+                    { $unwind: "$job" },
+                    {
+                        $project: {
+                            firstName: 1,
+                            lastName: 1,
+                            email: 1,
+                            phone: 1,
+                            status: 1,
+                            createdAt: 1,
+                            jobTitle: "$job.title",
+                            documentUrl: 1,
+                        },
+                    },
+                ],
+                totalCount: [{ $count: "count" }],
+            },
+        },
     ]);
+
+    const applicants = result[0]?.data || [];
+    const totalApplicants = result[0]?.totalCount[0]?.count || 0;
 
     return {
         applicants,
@@ -64,4 +94,18 @@ export async function getApplicantByIDFromDB(id: string) {
     const data = await ApplicantModel.findById(id).lean();
 
     return data;
+}
+
+export async function updateApplicantToDB({
+    id,
+    data,
+}: {
+    id: string;
+    data: Partial<IApplicant>;
+}) {
+    const updatedData = await ApplicantModel.findByIdAndUpdate(id, data, {
+        new: true,
+    });
+
+    return updatedData;
 }

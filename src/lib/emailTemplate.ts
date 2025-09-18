@@ -308,3 +308,75 @@ const label = (s: SimpleOrderStatus) =>
         completed: "Completed",
         canceled: "Canceled",
     })[s];
+
+export type ApplicantStatus =
+    | "applied"
+    | "shortlisted"
+    | "interview"
+    | "hired"
+    | "rejected";
+
+const APPLICANT_SUBJECT: Record<ApplicantStatus, () => string> = {
+    applied: () => `Application Received`,
+    shortlisted: () => `Application Shortlisted`,
+    interview: () => `Interview Invitation`,
+    hired: () => `Congratulations! You’re Hired`,
+    rejected: () => `Application Update`,
+};
+
+const APPLICANT_BADGE: Record<ApplicantStatus, "success" | "warning" | "info"> =
+    {
+        applied: "info",
+        shortlisted: "info",
+        interview: "warning",
+        hired: "success",
+        rejected: "warning",
+    };
+
+const applicantLabel = (s: ApplicantStatus) =>
+    ({
+        applied: "Applied",
+        shortlisted: "Shortlisted",
+        interview: "Interview",
+        hired: "Hired",
+        rejected: "Rejected",
+    })[s];
+
+export function buildApplicantStatusEmail(opts: {
+    status: ApplicantStatus;
+    userName: string;
+    userEmail: string;
+    viewUrl?: string;
+}): { subject: string; html: string } {
+    const subject = APPLICANT_SUBJECT[opts.status]();
+
+    // dynamic message per status
+    const message =
+        opts.status === "applied"
+            ? "We have received your application. Our team will review it and get back to you soon."
+            : opts.status === "shortlisted"
+              ? "Congratulations! You have been shortlisted. Our team will reach out with the next steps."
+              : opts.status === "interview"
+                ? "You have been selected for the interview stage. Please keep an eye on your inbox for scheduling details."
+                : opts.status === "hired"
+                  ? "We are delighted to inform you that you have been selected for the role. Our HR team will contact you with onboarding details."
+                  : "We appreciate the time and effort you put into your application. Unfortunately, you were not selected at this time, but we encourage you to apply for future opportunities.";
+
+    const html = renderEmailTemplateNode({
+        emailTitle: subject,
+        userName: opts.userName,
+        userEmail: opts.userEmail,
+        emailMessage: message,
+        orderTitle: "Application Status",
+        orderMessage: `Current status: ${applicantLabel(opts.status)}`,
+        status: {
+            text: applicantLabel(opts.status),
+            type: APPLICANT_BADGE[opts.status],
+        },
+        primaryButton: opts.viewUrl
+            ? { text: "View Application", url: opts.viewUrl }
+            : undefined,
+    });
+
+    return { subject, html };
+}

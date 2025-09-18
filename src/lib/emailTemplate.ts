@@ -342,14 +342,6 @@ const applicantLabel = (s: ApplicantStatus) =>
         rejected: "Rejected",
     })[s];
 
-function formatToAmPm(time?: string) {
-    if (!time) return undefined;
-    const [hours, minutes] = time.split(":").map(Number);
-    const suffix = hours >= 12 ? "PM" : "AM";
-    const formattedHours = ((hours + 11) % 12) + 1;
-    return `${formattedHours}:${minutes.toString().padStart(2, "0")} ${suffix}`;
-}
-
 export function buildApplicantStatusEmail(opts: {
     status: ApplicantStatus;
     userName: string;
@@ -376,7 +368,7 @@ export function buildApplicantStatusEmail(opts: {
             Greetings from <b>Web Briks LLC</b>. Here are your interview details:<br/><br/>
 
             <b>Date:</b> ${opts.date ?? "To be scheduled"}<br/>
-            <b>Time:</b> ${opts.time ? formatToAmPm(opts.time) : "To be scheduled"}<br/>
+            <b>Time:</b> ${opts.time ?? "To be scheduled"}<br/>
             <b>Address:</b> Level 14, Sheltech Rubynur, 121 Begum Rokeya Ave, Mirpur - 10, Dhaka.<br/>
             <b>Google Map:</b> <a href="https://maps.app.goo.gl/Bg4fwN1ucemxdVoF9">View Location</a><br/><br/>
 

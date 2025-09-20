@@ -47,7 +47,6 @@ async function getMessagesFromDB({
     const hasMore = docs.length > limit;
     const messages = hasMore ? docs.slice(0, -1) : docs;
 
-    // reverse so frontend sees oldest → newest
     messages.reverse();
 
     const nextCursor = hasMore ? String(messages[0]._id) : null;

@@ -63,7 +63,10 @@ async function newMessage(req: Request, res: Response) {
             senderID,
         });
 
-        io.to(`conversation:${conversationID}`).emit("new-message", message);
+        io.to(`conversation:${conversationID}`).emit("new-message", {
+            message,
+            userID: senderID,
+        });
 
         res.status(201).json({ success: true, message });
     } catch (error) {

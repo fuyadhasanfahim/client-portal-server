@@ -13,15 +13,10 @@ async function getMessagesFromDB({
     userID: string;
     conversationID: string;
     rawLimit: number;
-    cursor: string;
+    cursor: string | null;
 }) {
-    const user = await UserModel.findOne({
-        userID,
-    }).lean();
-
-    if (!user) {
-        throw new Error("No user found.");
-    }
+    const user = await UserModel.findOne({ userID }).lean();
+    if (!user) throw new Error("No user found.");
 
     const limit = Number.isFinite(rawLimit)
         ? Math.min(Math.max(Number(rawLimit), 1), 100)
@@ -29,38 +24,33 @@ async function getMessagesFromDB({
 
     const conversation =
         await ConversationModel.findById(conversationID).lean();
-
-    if (!conversation) {
-        throw new Error("No conversation found.");
-    }
+    if (!conversation) throw new Error("No conversation found.");
 
     const participant = conversation.participants.some(
         (p) => p.userID === userID
     );
-
-    if (user.role !== "admin" && !participant) {
+    if (user.role !== "admin" && !participant)
         throw new Error("Access forbidden.");
-    }
 
     const find: any = { conversationID: String(conversationID) };
 
     if (cursor) {
-        if (!Types.ObjectId.isValid(cursor as string)) {
-            throw new Error("Invalid cursor.");
-        }
-        find._id = { $gt: new Types.ObjectId(cursor as string) };
+        if (!Types.ObjectId.isValid(cursor)) throw new Error("Invalid cursor.");
+        find._id = { $lt: new Types.ObjectId(cursor) };
     }
 
     const docs = await MessageModel.find(find)
-        .sort({ sentAt: 1, _id: 1 })
+        .sort({ _id: -1 })
         .limit(limit + 1)
         .lean();
 
     const hasMore = docs.length > limit;
     const messages = hasMore ? docs.slice(0, -1) : docs;
-    const nextCursor = hasMore
-        ? String(messages[messages.length - 1]._id)
-        : null;
+
+    // reverse so frontend sees oldest → newest
+    messages.reverse();
+
+    const nextCursor = hasMore ? String(messages[0]._id) : null;
 
     return {
         messages,

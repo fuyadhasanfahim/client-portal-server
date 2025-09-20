@@ -1,4 +1,6 @@
 import { Server } from "socket.io";
+import UserModel from "./models/user.model";
+import ConversationModel from "./models/conversation.model";
 
 export default function registerSocketHandlers(io: Server) {
     io.on("connection", (socket) => {
@@ -34,12 +36,44 @@ export default function registerSocketHandlers(io: Server) {
             console.log(`📦 Socket ${socket.id} left quote room: ${quoteID}`);
         });
 
-        socket.on("join-conversation", (conversationID) => {
+        socket.on("join-conversation", async ({ conversationID, userID }) => {
             socket.join(`conversation:${conversationID}`);
+
+            await UserModel.findOneAndUpdate(
+                { userID },
+                { isOnline: true, lastSeenAt: new Date() }
+            );
+
+            await ConversationModel.updateOne(
+                { _id: conversationID, "participants.userID": userID },
+                {
+                    $set: {
+                        "participants.$.isOnline": true,
+                        "participants.$.lastSeenAt": new Date(),
+                        lastMessageAt: new Date(),
+                    },
+                }
+            );
         });
 
-        socket.on("leave-conversation", (conversationID) => {
+        socket.on("leave-conversation", async ({ conversationID, userID }) => {
             socket.leave(`conversation:${conversationID}`);
+
+            await UserModel.findOneAndUpdate(
+                { userID },
+                { isOnline: false, lastSeenAt: new Date() }
+            );
+
+            await ConversationModel.updateOne(
+                { _id: conversationID, "participants.userID": userID },
+                {
+                    $set: {
+                        "participants.$.isOnline": false,
+                        "participants.$.lastSeenAt": new Date(),
+                        lastMessageAt: new Date(),
+                    },
+                }
+            );
         });
 
         socket.on("disconnect", () => {

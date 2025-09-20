@@ -1,6 +1,6 @@
 import { Server } from "socket.io";
-import UserModel from "./models/user.model";
-import ConversationModel from "./models/conversation.model";
+import UserModel from "./models/user.model.js";
+import ConversationModel from "./models/conversation.model.js";
 
 export default function registerSocketHandlers(io: Server) {
     io.on("connection", (socket) => {

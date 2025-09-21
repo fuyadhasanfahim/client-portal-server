@@ -4,44 +4,41 @@ import {
     IParticipant,
 } from "../types/conversation.interface.js";
 
-const participantSchema = new Schema<IParticipant>(
-    {
-        userID: { type: String, required: true },
-        name: { type: String, required: true },
-        email: { type: String, required: true },
-        image: String,
-        isOnline: { type: Boolean, required: true },
-        lastSeenAt: Date,
-        role: { type: String, enum: ["user", "admin"], required: true },
+const ParticipantSchema = new Schema<IParticipant>({
+    userID: { type: String, required: true, index: true },
+    name: String,
+    email: String,
+    image: String,
+    isOnline: { type: Boolean, default: false },
+    lastSeenAt: Date,
+    role: { type: String, enum: ["admin", "user"], required: true },
+    unreadCount: {
+        type: Number,
+        default: 0,
     },
-    { _id: false }
-);
+    lastReadMessageID: {
+        type: Schema.Types.ObjectId,
+        ref: "Message",
+    },
+});
 
-const conversationSchema = new Schema<IConversation>(
+const ConversationSchema = new Schema<IConversation>(
     {
-        participants: { type: [participantSchema], required: true },
-        lastMessageAt: {
-            type: Date,
-            default: Date.now,
-        },
-        unread: Number,
+        participants: { type: [ParticipantSchema], required: true },
+        lastMessageAt: { type: Date, default: Date.now, index: true },
         lastMessageText: String,
         lastMessageAuthorID: String,
-        type: {
-            type: String,
-        },
+        activeAdminID: { type: String, default: null, index: true },
+        activeClientID: { type: String, default: null, index: true },
+        lock: { type: Boolean, default: false },
     },
-    {
-        timestamps: true,
-        versionKey: false,
-    }
+    { timestamps: true }
 );
 
-conversationSchema.index({ lastMessageAt: -1 });
-conversationSchema.index({ "participants.userID": 1 });
+ConversationSchema.index({ lastMessageAt: -1 });
 
 const ConversationModel = model<IConversation>(
     "Conversation",
-    conversationSchema
+    ConversationSchema
 );
 export default ConversationModel;

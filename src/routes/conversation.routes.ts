@@ -9,4 +9,7 @@ router.get(
     ConversationControllers.getConversation
 );
 
+router.post("/join", ConversationControllers.join);
+router.post("/leave", ConversationControllers.leave);
+
 export const ConversationRoutes = router;

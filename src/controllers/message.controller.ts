@@ -43,17 +43,13 @@ async function getMessages(req: Request, res: Response) {
 
 async function newMessage(req: Request, res: Response) {
     try {
-        const { conversationID, text, senderID } = req.body;
+        const { conversationID, text, senderID, attachment } = req.body;
 
         if (!senderID || !conversationID) {
             res.status(400).json({
                 success: false,
-                message: "Something is missing in the body.",
+                message: "conversationID and senderID required",
             });
-            return;
-        }
-        if (!text?.trim()) {
-            res.status(400).json({ success: false, message: "text required" });
             return;
         }
 
@@ -61,6 +57,7 @@ async function newMessage(req: Request, res: Response) {
             conversationID,
             text,
             senderID,
+            attachment,
         });
 
         io.to(`conversation:${conversationID}`).emit("new-message", {
@@ -70,9 +67,12 @@ async function newMessage(req: Request, res: Response) {
 
         res.status(201).json({ success: true, message });
     } catch (error) {
-        res.status(500).json({
+        res.status(400).json({
             success: false,
-            message: error instanceof Error && error.message,
+            message:
+                error instanceof Error
+                    ? error.message
+                    : "Failed to send message",
         });
     }
 }

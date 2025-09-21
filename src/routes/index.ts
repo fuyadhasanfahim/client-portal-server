@@ -16,6 +16,7 @@ import { teamMemberRoute } from "./team-member.route.js";
 import { clientRouter } from "./client.route.js";
 import { jobRoute } from "./job.route.js";
 import { applicantsRoute } from "./applicants.route.js";
+import { UploadRoutes } from "./upload.routes.js";
 
 const router = Router();
 
@@ -87,6 +88,10 @@ const moduleRoutes = [
     {
         path: "/applicants",
         route: applicantsRoute,
+    },
+    {
+        path: "/uploads",
+        route: UploadRoutes,
     },
 ];
 

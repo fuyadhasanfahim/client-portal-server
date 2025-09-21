@@ -1,19 +1,28 @@
 import { Schema, model } from "mongoose";
-import { IMessage } from "../types/message.interface";
+import { IAttachment, IMessage } from "../types/message.interface.js";
 
-const messageSchema = new Schema<IMessage>(
+const AttachmentSchema = new Schema<IAttachment>({
+    url: { type: String, required: true },
+    name: { type: String, required: true },
+    size: { type: Number, required: true, max: 50 * 1024 * 1024 },
+    contentType: String,
+});
+
+const MessageSchema = new Schema<IMessage>(
     {
         conversationID: { type: String, required: true, index: true },
-        authorID: { type: String, required: true, index: true },
-        authorRole: { type: String, required: true },
+        authorID: String,
+        authorRole: { type: String, enum: ["user", "admin"] },
         text: String,
-        sentAt: { type: Date, default: Date.now },
+        kind: { type: String, enum: ["user", "system"], required: true },
+        systemType: { type: String, enum: ["join", "leave", "info"] },
+        sentAt: { type: Date, default: Date.now, index: true },
+        attachment: { type: AttachmentSchema, default: null },
     },
-    {
-        timestamps: true,
-        versionKey: false,
-    }
+    { timestamps: true }
 );
 
-const MessageModel = model<IMessage>("Message", messageSchema);
+MessageSchema.index({ conversationID: 1, _id: -1 });
+
+const MessageModel = model<IMessage>("Message", MessageSchema);
 export default MessageModel;

@@ -19,7 +19,7 @@ async function getMeFromDB(userID: string) {
 
     const dataToSanitize = {
         ...user.toObject(),
-        conversationID: conversation?._id,
+        conversationID: conversation?._id ? String(conversation._id) : undefined,
     };
 
     const sanitizedData = await getSanitizeUserData(dataToSanitize);

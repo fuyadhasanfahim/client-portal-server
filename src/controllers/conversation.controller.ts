@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import ConversationServices from "../services/conversation.service.js";
+import { io } from "../server.js";
 
 async function getConversations(req: Request, res: Response) {
     try {
@@ -62,8 +63,79 @@ async function getConversation(req: Request, res: Response) {
     }
 }
 
+async function join(req: Request, res: Response) {
+    try {
+        const { conversationID, userID } = req.body;
+        if (!conversationID || !userID) {
+            res.status(400).json({
+                success: false,
+                message: "conversationID and userID required",
+            });
+            return;
+        }
+
+        const { conversation, systemMessage, userRole } =
+            await ConversationServices.joinConversation({
+                conversationID,
+                userID,
+            });
+
+        io.to(`conversation:${conversationID}`).emit("new-message", {
+            message: systemMessage,
+            system: true,
+        });
+
+        res.status(200).json({
+            success: true,
+            conversation,
+            systemMessage,
+            userRole,
+        });
+    } catch (e) {
+        res.status(409).json({
+            success: false,
+            message: e instanceof Error ? e.message : "Join failed",
+        });
+    }
+}
+
+async function leave(req: Request, res: Response) {
+    try {
+        const { conversationID, userID } = req.body;
+        if (!conversationID || !userID) {
+            res.status(400).json({
+                success: false,
+                message: "conversationID and userID required",
+            });
+            return;
+        }
+
+        const { conversation, systemMessage } =
+            await ConversationServices.leaveConversation({
+                conversationID,
+                userID,
+            });
+
+        if (systemMessage) {
+            io.to(`conversation:${conversationID}`).emit("new-message", {
+                message: systemMessage,
+                system: true,
+            });
+        }
+
+        res.status(200).json({ success: true, conversation, systemMessage });
+    } catch (e) {
+        res.status(500).json({
+            success: false,
+            message: e instanceof Error ? e.message : "Leave failed",
+        });
+    }
+}
+
 const ConversationControllers = {
     getConversations,
     getConversation,
+    join,
+    leave,
 };
 export default ConversationControllers;

@@ -23,6 +23,11 @@ const envConfig = {
     paypal_client_id: process.env.PAYPAL_CLIENT_ID,
     paypal_client_secret: process.env.PAYPAL_CLIENT_SECRET,
     paypal_api_base_url: process.env.PAYPAL_API_BASE_URL,
+    aws_secret_access_key: process.env.AWS_SECRET_ACCESS_KEY,
+    aws_access_key_id: process.env.AWS_ACCESS_KEY_ID,
+    aws_region: process.env.AWS_REGION,
+    aws_bucket: process.env.AWS_S3_BUCKET,
+    aws_prefix: process.env.AWS_S3_PREFIX,
 };
 
 export default envConfig;

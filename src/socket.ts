@@ -54,6 +54,30 @@ export default function registerSocketHandlers(io: Server) {
                     },
                 }
             );
+
+            // If no participant matched, add them
+            const updated = await ConversationModel.findOne({
+                _id: conversationID,
+                "participants.userID": userID,
+            });
+
+            if (!updated) {
+                await ConversationModel.updateOne(
+                    { _id: conversationID },
+                    {
+                        $push: {
+                            participants: {
+                                userID,
+                                role: "admin",
+                                isOnline: true,
+                                lastSeenAt: new Date(),
+                                unreadCount: 0,
+                            },
+                        },
+                        $set: { lastMessageAt: new Date() },
+                    }
+                );
+            }
         });
 
         socket.on("leave-conversation", async ({ conversationID, userID }) => {

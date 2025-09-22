@@ -11,12 +11,13 @@ const {
     aws_secret_access_key,
 } = envConfig;
 
-const s3 = new S3Client({
+export const s3 = new S3Client({
     region: aws_region,
     credentials: {
         accessKeyId: aws_access_key_id!,
         secretAccessKey: aws_secret_access_key!,
     },
+    forcePathStyle: false,
 });
 
 export async function getPresignedUpload(req: Request, res: Response) {
@@ -25,28 +26,25 @@ export async function getPresignedUpload(req: Request, res: Response) {
             req.body;
 
         if (!fileName || !contentType || typeof size !== "number") {
-            res.status(400).json({
+             res.status(400).json({
                 success: false,
                 message: "fileName, contentType, size required",
-            });
-            return;
+            });return
         }
         if (size > 50 * 1024 * 1024) {
-            res.status(400).json({
+             res.status(400).json({
                 success: false,
                 message: "Max file size is 50MB",
-            });
-            return;
+            });return
         }
         if (!conversationID || !senderID) {
-            res.status(400).json({
+             res.status(400).json({
                 success: false,
                 message: "conversationID and senderID required",
-            });
-            return;
+            });return
         }
-
-        const key = `${aws_prefix}/${conversationID}/${Date.now()}-${encodeURIComponent(fileName)}`;
+        
+        const key = `${aws_prefix}/${conversationID}/${Date.now()}-${fileName}`;
 
         const command = new PutObjectCommand({
             Bucket: aws_bucket,
@@ -72,7 +70,8 @@ export async function getPresignedUpload(req: Request, res: Response) {
             message:
                 error instanceof Error
                     ? error.message
-                    : "Failed to send message",
+                    : "Failed to presign upload",
         });
     }
 }
+

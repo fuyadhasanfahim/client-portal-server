@@ -93,15 +93,15 @@ async function newMessageInDB({
     }
 
     // Check if user is online in this conversation
-    const participant = conversation.participants.find(
-        (p) => p.userID === senderID
-    );
+    // const participant = conversation.participants.find(
+    //     (p) => p.userID === senderID
+    // );
 
-    if (!participant?.isOnline) {
-        throw new Error(
-            "You must join the conversation before sending messages."
-        );
-    }
+    // if (!participant?.isOnline) {
+    //     throw new Error(
+    //         "You must join the conversation before sending messages."
+    //     );
+    // }
 
     if (!attachment && !text?.trim()) {
         throw new Error("Message text or attachment required");

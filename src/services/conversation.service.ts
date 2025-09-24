@@ -36,7 +36,7 @@ async function getConversationFromDB(conversationID: string) {
     return conversation;
 }
 
-export async function joinConversation({
+async function joinConversation({
     conversationID,
     userID,
 }: {
@@ -66,8 +66,10 @@ export async function joinConversation({
             email: user.email,
             image: user.image,
             role: "admin",
-            isOnline: false,
-            lastSeenAt: undefined,
+            isOnline: true,
+            lastSeenAt: new Date(),
+            unreadCount: 0,
+            lastReadMessageID: undefined,
         };
         conv.participants.push(participant);
     }
@@ -108,7 +110,7 @@ export async function joinConversation({
     };
 }
 
-export async function leaveConversation({
+async function leaveConversation({
     conversationID,
     userID,
 }: {
@@ -123,14 +125,11 @@ export async function leaveConversation({
 
     const participant = conv.participants.find((p) => p.userID === userID);
 
-    // if already offline → no message
-    if (!participant || !participant.isOnline) {
-        return { conversation: conv, systemMessage: null };
+    if (participant) {
+        participant.isOnline = false;
+        participant.lastSeenAt = new Date();
+        await conv.save();
     }
-
-    participant.isOnline = false;
-    conv.lastMessageAt = new Date();
-    await conv.save();
 
     const text =
         user.role === "admin"
@@ -138,7 +137,7 @@ export async function leaveConversation({
             : `${user.name ?? "The client"} left the chat.`;
 
     const sysMsg = await MessageModel.create({
-        conversationID: String(conversationID),
+        conversationID,
         kind: "system",
         systemType: "leave",
         text,
@@ -148,10 +147,33 @@ export async function leaveConversation({
     return { conversation: conv, systemMessage: sysMsg };
 }
 
+async function markAsRead({
+    conversationID,
+    userID,
+    lastMessageID,
+}: {
+    conversationID: string;
+    userID: string;
+    lastMessageID: string;
+}) {
+    const conv = await ConversationModel.findById(conversationID);
+    if (!conv) throw new Error("Conversation not found");
+
+    const participant = conv.participants.find((p) => p.userID === userID);
+    if (!participant) throw new Error("Not a participant");
+
+    participant.unreadCount = 0;
+    participant.lastReadMessageID = lastMessageID;
+
+    await conv.save();
+    return conv;
+}
+
 const ConversationServices = {
     getConversationsFromDB,
     getConversationFromDB,
     joinConversation,
     leaveConversation,
+    markAsRead,
 };
 export default ConversationServices;

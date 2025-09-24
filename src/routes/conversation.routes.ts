@@ -11,5 +11,6 @@ router.get(
 
 router.post("/join", ConversationControllers.join);
 router.post("/leave", ConversationControllers.leave);
+router.post("/mark-as-read", ConversationControllers.markAsRead);
 
 export const ConversationRoutes = router;

@@ -132,10 +132,41 @@ async function leave(req: Request, res: Response) {
     }
 }
 
+async function markAsRead(req: Request, res: Response) {
+    try {
+        const { conversationID, userID, lastMessageID } = req.body;
+
+        if (!conversationID || !userID || !lastMessageID) {
+            res.status(400).json({
+                success: false,
+                message: "conversationID, userID, and lastMessageID required",
+            });
+            return;
+        }
+
+        const conversation = await ConversationServices.markAsRead({
+            conversationID,
+            userID,
+            lastMessageID,
+        });
+
+        res.status(200).json({
+            success: true,
+            conversation,
+        });
+    } catch (e) {
+        res.status(500).json({
+            success: false,
+            message: e instanceof Error ? e.message : "Mark as read failed",
+        });
+    }
+}
+
 const ConversationControllers = {
     getConversations,
     getConversation,
     join,
     leave,
+    markAsRead,
 };
 export default ConversationControllers;

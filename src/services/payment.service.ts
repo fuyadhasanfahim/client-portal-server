@@ -1,3 +1,4 @@
+// services/payment.service.ts
 import {
     endOfMonth,
     startOfMonth,
@@ -12,7 +13,6 @@ import { IPayment } from "../types/payment.interface.js";
 import { OrderModel } from "../models/order.model.js";
 import { nanoid } from "nanoid";
 
-// services/payment.service.ts
 async function newPaymentInDB({
     userID,
     orderID,
@@ -27,27 +27,52 @@ async function newPaymentInDB({
     const order = await OrderModel.findOne({ orderID });
     if (!order) throw new Error("Order not found with this order id.");
 
+    // generate paymentID if not passed
     const paymentID = paymentMethodID || `WBP${nanoid(10)}`;
 
-    await PaymentModel.create({
-        paymentID,
-        userID,
-        orderID,
-        paymentOption,
-        paymentMethodID,
-        paymentIntentID,
-        customerID,
-        status,
-        amount,
-        currency,
-    });
+    // ✅ check if payment already exists for (orderID + status)
+    let payment = await PaymentModel.findOne({ orderID, status });
 
-    order.paymentID = paymentID;
-    order.paymentStatus = status as IPayment["status"]; // "pay-later" or "pending"
+    if (payment) {
+        // update existing payment
+        await PaymentModel.updateOne(
+            { _id: payment._id },
+            {
+                $set: {
+                    userID,
+                    paymentOption,
+                    paymentMethodID,
+                    paymentIntentID,
+                    customerID,
+                    status,
+                    amount,
+                    currency,
+                },
+            }
+        );
+    } else {
+        // create new payment
+        payment = await PaymentModel.create({
+            paymentID,
+            userID,
+            orderID,
+            paymentOption,
+            paymentMethodID,
+            paymentIntentID,
+            customerID,
+            status,
+            amount,
+            currency,
+        });
+    }
+
+    // update order
+    order.paymentID = payment.paymentID;
+    order.paymentStatus = status as IPayment["status"]; // pending | pay-later | paid
     order.orderStage = "payment-completed"; // ✅ always allow count
     await order.save();
 
-    return { order };
+    return { order, payment };
 }
 
 export async function getPaymentsByStatusFromDB({
@@ -68,9 +93,7 @@ export async function getPaymentsByStatusFromDB({
     payments: IPayment[];
 }> {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const baseQuery: Record<string, any> = {
-        paymentOption,
-    };
+    const baseQuery: Record<string, any> = { paymentOption };
 
     if (status) baseQuery.status = status;
     if (role === "user" && userID) baseQuery.userID = userID;
@@ -98,18 +121,12 @@ export async function getPaymentsByStatusFromDB({
 
     const current = await PaymentModel.find({
         ...baseQuery,
-        createdAt: {
-            $gte: currentStart,
-            $lte: currentEnd,
-        },
+        createdAt: { $gte: currentStart, $lte: currentEnd },
     });
 
     const previous = await PaymentModel.find({
         ...baseQuery,
-        createdAt: {
-            $gte: previousStart,
-            $lte: previousEnd,
-        },
+        createdAt: { $gte: previousStart, $lte: previousEnd },
     });
 
     const payments = await PaymentModel.find(baseQuery);
@@ -118,14 +135,11 @@ export async function getPaymentsByStatusFromDB({
 }
 
 async function getPaymentByOrderIDFromDB(orderID: string) {
-    const payment = await PaymentModel.findOne({ orderID });
-
-    return payment;
+    return await PaymentModel.findOne({ orderID });
 }
 
 async function getPaymentsByUserIDFromDB(userID: string) {
-    const payments = await PaymentModel.find({ userID });
-    return payments;
+    return await PaymentModel.find({ userID });
 }
 
 const PaymentServices = {

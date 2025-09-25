@@ -2,10 +2,10 @@ import { nanoid } from "nanoid";
 import stripe from "../lib/stripe.js";
 import { OrderModel } from "../models/order.model.js";
 import UserModel from "../models/user.model.js";
-import Stripe from "stripe";
 import { PaymentModel } from "../models/payment.model.js";
-import { sendEmail } from "../lib/nodemailer.js";
 import envConfig from "../config/env.config.js";
+import Stripe from "stripe";
+import { sendEmail } from "../lib/nodemailer.js";
 
 async function newOrderCheckoutInDB(
     orderID: string,
@@ -14,21 +14,18 @@ async function newOrderCheckoutInDB(
 ) {
     try {
         const order = await OrderModel.findOne({ orderID });
-
         if (!order) {
             throw new Error("Order not found with this id.");
         }
 
-        const user = await UserModel.findOne({
-            userID: order.user.userID,
-        });
-
+        const user = await UserModel.findOne({ userID: order.user.userID });
         if (!user) {
             throw new Error("No user info found in the order.");
         }
 
         const orderSessionId = `PAYMENT-${nanoid(10)}`;
 
+        // 🔹 Create a Stripe checkout session
         const session = await stripe.checkout.sessions.create({
             mode: "payment",
             ui_mode: "embedded",
@@ -53,27 +50,32 @@ async function newOrderCheckoutInDB(
             },
         });
 
-        // ✅ Record pending payment immediately
-        await PaymentModel.create({
-            paymentID: orderSessionId,
-            checkoutSessionID: session.id,
-            userID: order.user.userID,
-            orderID,
-            paymentOption,
-            paymentMethod,
-            status: "pending",
-            amount: order.total ?? 0,
-            currency: "usd",
-        });
+        // 🔹 Upsert payment record instead of always creating
+        await PaymentModel.findOneAndUpdate(
+            { orderID, status: "pending" }, // match existing pending payment
+            {
+                paymentID: orderSessionId,
+                checkoutSessionID: session.id,
+                userID: order.user.userID,
+                orderID,
+                paymentOption,
+                paymentMethod,
+                status: "pending",
+                amount: order.total ?? 0,
+                currency: user?.currency ?? "usd",
+            },
+            { upsert: true, new: true }
+        );
 
+        // 🔹 Update order with payment info
         order.paymentID = orderSessionId;
         order.paymentStatus = "pending";
-        order.orderStage = "payment-completed"; // ✅ force stage for counting
+        order.orderStage = "payment-completed"; // mark stage
         await order.save();
 
         return session.client_secret;
     } catch (error) {
-        console.error(error);
+        console.error("❌ Error in newOrderCheckoutInDB:", error);
         throw error;
     }
 }

@@ -97,13 +97,7 @@ export const OrderSchema = new Schema<IOrder>(
         paymentID: { type: String },
         paymentStatus: {
             type: String,
-            enum: [
-                "pending",
-                "pay-later",
-                "paid",
-                "payment-failed",
-                "refunded",
-            ],
+            enum: ["pending", "succeeded", "paid", "failed", "refunded"],
             default: "pending",
         },
         refundID: {

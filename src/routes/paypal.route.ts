@@ -3,6 +3,7 @@ import { Router } from "express";
 import axios from "axios";
 import envConfig from "../config/env.config.js";
 import { OrderModel } from "../models/order.model.js";
+import { PaymentModel } from "../models/payment.model.js";
 import {
     IOrder,
     IOrderServiceSelection,
@@ -14,6 +15,9 @@ const router = Router();
 const { paypal_client_id, paypal_client_secret, paypal_api_base_url } =
     envConfig;
 
+/**
+ * Calculate PayPal line items + total
+ */
 function calculateOrderTotal(order: IOrder): {
     items: any[];
     total: number;
@@ -98,7 +102,10 @@ function calculateOrderTotal(order: IOrder): {
     return { items, total };
 }
 
-async function getAccessToken() {
+/**
+ * Get PayPal OAuth access token
+ */
+async function getAccessToken(): Promise<string> {
     const auth = Buffer.from(
         `${paypal_client_id}:${paypal_client_secret}`
     ).toString("base64");
@@ -116,15 +123,20 @@ async function getAccessToken() {
         );
         return res.data.access_token;
     } catch (error: any) {
-        console.error("PayPal token generation failed:", error.response?.data);
+        console.error(
+            "PayPal token generation failed:",
+            error.response?.data || error.message
+        );
         throw new Error("Failed to generate PayPal access token");
     }
 }
 
+/**
+ * Create PayPal Order
+ */
 router.post("/create-order", async (req, res) => {
     try {
         const { orderID } = req.body;
-
         if (!orderID) {
             res.status(400).json({ error: "Order ID is required" });
             return;
@@ -136,21 +148,12 @@ router.post("/create-order", async (req, res) => {
             return;
         }
 
-        if (order.orderStage !== "details-provided") {
-            res.status(400).json({
-                error: "Order not ready for payment",
-                currentStage: order.orderStage,
-            });
-            return;
-        }
-
         if (order.paymentStatus === "paid") {
             res.status(400).json({ error: "Order already paid" });
             return;
         }
 
         const accessToken = await getAccessToken();
-
         const { items, total } = calculateOrderTotal(order);
 
         const response = await axios.post(
@@ -175,16 +178,25 @@ router.post("/create-order", async (req, res) => {
                     },
                 ],
             },
-            {
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${accessToken}`,
-                },
-            }
+            { headers: { Authorization: `Bearer ${accessToken}` } }
         );
+
+        // ✅ Record pending payment
+        await PaymentModel.create({
+            paymentID: response.data.id,
+            checkoutSessionID: response.data.id,
+            userID: order.user.userID,
+            orderID,
+            paymentOption: "paypal",
+            paymentMethod: "paypal",
+            status: "pending",
+            amount: total,
+            currency: "USD",
+        });
 
         order.paymentID = response.data.id;
         order.paymentStatus = "pending";
+        order.orderStage = "payment-completed"; // ✅ force stage to count order
         await order.save();
 
         res.json({
@@ -193,6 +205,10 @@ router.post("/create-order", async (req, res) => {
             links: response.data.links,
         });
     } catch (error: any) {
+        console.error(
+            "PayPal Create Order Failed:",
+            error.response?.data || error.message
+        );
         res.status(500).json({
             error: "Failed to create PayPal order",
             details: error.response?.data || error.message,
@@ -200,6 +216,9 @@ router.post("/create-order", async (req, res) => {
     }
 });
 
+/**
+ * Capture PayPal Order
+ */
 router.post("/:orderID/capture", async (req, res) => {
     try {
         const { orderID } = req.params;
@@ -208,12 +227,7 @@ router.post("/:orderID/capture", async (req, res) => {
         const response = await axios.post(
             `${paypal_api_base_url}/v2/checkout/orders/${orderID}/capture`,
             {},
-            {
-                headers: {
-                    Authorization: `Bearer ${accessToken}`,
-                    "Content-Type": "application/json",
-                },
-            }
+            { headers: { Authorization: `Bearer ${accessToken}` } }
         );
 
         const order = await OrderModel.findOne({ paymentID: orderID });
@@ -222,24 +236,34 @@ router.post("/:orderID/capture", async (req, res) => {
             return;
         }
 
+        const payment = await PaymentModel.findOne({ paymentID: orderID });
+        if (!payment) {
+            res.status(404).json({ error: "Payment not found" });
+            return;
+        }
+
         if (response.data.status === "COMPLETED") {
             order.paymentStatus = "paid";
-            order.orderStage = "payment-completed";
             await order.save();
 
-            const captureDetails =
-                response.data.purchase_units[0].payments.captures[0];
-            res.json({
-                status: response.data.status,
-                orderStatus: order.status,
-                paymentStatus: order.paymentStatus,
-                captureDetails,
-                paypalOrderID: orderID,
-            });
+            await PaymentModel.updateOne(
+                { _id: payment._id },
+                {
+                    status: "paid",
+                    totalAmount: payment.amount,
+                    // you can also store payer details from response.data if needed
+                }
+            );
         }
+
+        res.json({
+            status: response.data.status,
+            orderStage: order.orderStage,
+            paymentStatus: order.paymentStatus,
+        });
     } catch (error: any) {
         console.error(
-            "PayPal Capture Failed",
+            "PayPal Capture Failed:",
             error.response?.data || error.message
         );
         res.status(500).json({

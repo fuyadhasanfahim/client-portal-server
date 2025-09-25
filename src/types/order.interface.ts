@@ -61,12 +61,7 @@ export interface IOrder extends Document {
         | "completed"
         | "canceled";
     paymentID?: string;
-    paymentStatus:
-        | "pending"
-        | "pay-later"
-        | "paid"
-        | "payment-failed"
-        | "refunded";
+    paymentStatus: "pending" | "succeeded" | "paid" | "failed" | "refunded";
     refundID?: string;
     orderStage:
         | "draft"

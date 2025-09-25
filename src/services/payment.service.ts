@@ -12,6 +12,7 @@ import { IPayment } from "../types/payment.interface.js";
 import { OrderModel } from "../models/order.model.js";
 import { nanoid } from "nanoid";
 
+// services/payment.service.ts
 async function newPaymentInDB({
     userID,
     orderID,
@@ -24,14 +25,11 @@ async function newPaymentInDB({
     currency,
 }: Partial<IPayment>) {
     const order = await OrderModel.findOne({ orderID });
+    if (!order) throw new Error("Order not found with this order id.");
 
-    if (!order) {
-        throw new Error("Order not found with this order id.");
-    }
+    const paymentID = paymentMethodID || `WBP${nanoid(10)}`;
 
-    const paymentID = paymentMethodID ? paymentMethodID : `WBP${nanoid(10)}`;
-
-    const payment = await PaymentModel.create({
+    await PaymentModel.create({
         paymentID,
         userID,
         orderID,
@@ -39,18 +37,17 @@ async function newPaymentInDB({
         paymentMethodID,
         paymentIntentID,
         customerID,
-        status: status as "pending" | "succeeded" | "failed" | "refunded",
+        status,
         amount,
         currency,
     });
 
     order.paymentID = paymentID;
-    order.paymentStatus =
-        status === "succeeded" || status === "paid" ? "paid" : "pending";
-    order.orderStage = "payment-completed";
+    order.paymentStatus = status as IPayment["status"]; // "pay-later" or "pending"
+    order.orderStage = "payment-completed"; // ✅ always allow count
     await order.save();
 
-    return { payment, order };
+    return { order };
 }
 
 export async function getPaymentsByStatusFromDB({

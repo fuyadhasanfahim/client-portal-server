@@ -13,9 +13,7 @@ async function newOrderCheckoutInDB(
     paymentMethod: string
 ) {
     try {
-        const order = await OrderModel.findOne({
-            orderID,
-        });
+        const order = await OrderModel.findOne({ orderID });
 
         if (!order) {
             throw new Error("Order not found with this id.");
@@ -31,15 +29,13 @@ async function newOrderCheckoutInDB(
                 {
                     price_data: {
                         currency: "usd",
-                        product_data: {
-                            name: `Order #${orderID}`,
-                        },
+                        product_data: { name: `Order #${orderID}` },
                         unit_amount: Math.round((order.total ?? 0) * 100),
                     },
                     quantity: 1,
                 },
             ],
-            return_url: `${envConfig.frontend_url!}/orders/order-payment/complete?session_id={CHECKOUT_SESSION_ID}`,
+            return_url: `${envConfig.frontend_url}/orders/order-payment/complete?session_id={CHECKOUT_SESSION_ID}`,
             metadata: {
                 orderID,
                 userID: order.user.userID,
@@ -49,9 +45,28 @@ async function newOrderCheckoutInDB(
             },
         });
 
+        // ✅ Record pending payment immediately
+        await PaymentModel.create({
+            paymentID: orderSessionId,
+            checkoutSessionID: session.id,
+            userID: order.user.userID,
+            orderID,
+            paymentOption,
+            paymentMethod,
+            status: "pending",
+            amount: order.total ?? 0,
+            currency: "usd",
+        });
+
+        order.paymentID = orderSessionId;
+        order.paymentStatus = "pending";
+        order.orderStage = "payment-completed"; // ✅ force stage for counting
+        await order.save();
+
         return session.client_secret;
     } catch (error) {
-        console.log(error);
+        console.error(error);
+        throw error;
     }
 }
 

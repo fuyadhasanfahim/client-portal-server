@@ -19,6 +19,14 @@ async function newOrderCheckoutInDB(
             throw new Error("Order not found with this id.");
         }
 
+        const user = await UserModel.findOne({
+            userID: order.user.userID,
+        });
+
+        if (!user) {
+            throw new Error("No user info found in the order.");
+        }
+
         const orderSessionId = `PAYMENT-${nanoid(10)}`;
 
         const session = await stripe.checkout.sessions.create({
@@ -28,7 +36,7 @@ async function newOrderCheckoutInDB(
             line_items: [
                 {
                     price_data: {
-                        currency: "usd",
+                        currency: user?.currency ?? "usd",
                         product_data: { name: `Order #${orderID}` },
                         unit_amount: Math.round((order.total ?? 0) * 100),
                     },
